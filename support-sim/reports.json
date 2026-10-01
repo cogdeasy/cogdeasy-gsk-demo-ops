@@ -1,7 +1,7 @@
 {
-  "note": "R&D AI-scientist platform support reports for the Q4 triage beat. Roughly half are duplicates of an earlier report; 'dup_of' is the answer key and is never posted.",
+  "note": "R&D AI-scientist platform support reports for the Q4 triage beat. Roughly half are duplicates of an earlier report (R1 duplicates the Q1 bug already on the board); 'dup_of' is the answer key and is never posted.",
   "reports": [
-    {"id": "R1", "reporter": "scientist-a", "text": "Saving my concept set 'Type 2 diabetes' gives a red error box with 'duplicate key value violates unique constraint' and some SQL. Is the database broken?", "dup_of": null},
+    {"id": "R1", "reporter": "scientist-a", "text": "Saving my concept set 'Type 2 diabetes' gives a red error box with 'duplicate key value violates unique constraint' and some SQL. Is the database broken?", "dup_of": "Q1"},
     {"id": "R2", "reporter": "scientist-b", "text": "Cohort definition list takes over a minute to load since this morning.", "dup_of": null},
     {"id": "R3", "reporter": "scientist-c", "text": "Copying a concept set and saving it under the same name returns HTTP 500, nothing useful in the message.", "dup_of": "R1"},
     {"id": "R4", "reporter": "scientist-d", "text": "Export of characterization results to CSV has the column headers shifted by one.", "dup_of": null},

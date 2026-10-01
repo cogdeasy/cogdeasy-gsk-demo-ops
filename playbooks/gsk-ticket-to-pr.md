@@ -11,10 +11,12 @@ Used by the `gsk-ticket-to-pr` automation (Jira label `devin`). Repo: cogdeasy/c
 4. Reproduce before touching code (`./reproduce.sh` for error-mapper tickets). Paste the output.
 5. Search the codebase for the code path and write a short step-by-step plan in the session.
 6. Write regression tests from the acceptance criteria, one or more per AC. Run them and show
-   which fail on the current code (red).
+   which fail on the current code (red). For a tests-only story (no production change), skip
+   the red run and step 7; the new tests pass on the current code.
 7. Fix the most specific root cause. Do not catch-and-ignore; do not return raw database text.
 8. Run the new tests (green), then the full suite `mvn -B -Pwebapi-postgresql test`. Report
-   run / passed / failures / errors / skipped from `target/surefire-reports`.
+   run / passed / failures / errors / skipped from `python3 dev/ci/summary.py`, which totals
+   `target/surefire-reports` (unit) and `target/failsafe-reports` (integration).
 9. Branch `devin/<ticket-key-lowercase>-<slug>`, PR title `fix(<ticket>): ...`, fill every
    template section: Ticket, URS delta, Test mapping (AC -> test -> before -> after), Change
    record (tier silver).
