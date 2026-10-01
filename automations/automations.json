@@ -1,0 +1,54 @@
+{
+  "note": "Desired-state definitions for the Track B Devin Automations. Created in the Devin app (Settings > Automations) or via the Devin MCP; this file is the reviewable source of truth. Slack channel ids must be looked up, not guessed.",
+  "automations": [
+    {
+      "name": "gsk-ticket-to-pr",
+      "demo": "Q1",
+      "trigger": {"type": "jira", "event": "issue_label_added", "project": "GSK", "label": "devin"},
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-ticket-to-pr.md",
+      "output": "PR on the repo; PR link, test totals and status commented back on the Jira issue"
+    },
+    {
+      "name": "gsk-backlog-fanout",
+      "demo": "Q2",
+      "trigger": {"type": "jira", "event": "issue_label_added", "project": "GSK", "issue_type": "Epic", "label": "devin-backlog"},
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-backlog-fanout.md",
+      "output": "Three child sessions (SEC, BUG, COV), three PRs, summary on the Epic",
+      "notes": "Parent session needs permission to start child sessions unattended."
+    },
+    {
+      "name": "gsk-zcode-reader",
+      "demo": "Q3",
+      "trigger": {"type": "jira", "event": "issue_label_added", "project": "GSK", "label": "devin-abap"},
+      "repo": "cogdeasy/cogdeasy-gsk-abap2xlsx",
+      "playbook": "playbooks/gsk-zcode-reader.md",
+      "output": "docs/zcode/<object>.md PR; counts commented on the Jira issue"
+    },
+    {
+      "name": "gsk-rd-support-triage-jira",
+      "demo": "Q4",
+      "trigger": {"type": "jira", "event": "issue_created", "project": "GSK", "label": "rd-support"},
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-rd-support-triage.md",
+      "output": "Duplicate link, triage evidence or fix PR on the Jira issue"
+    },
+    {
+      "name": "gsk-rd-support-triage-slack",
+      "demo": "Q4",
+      "trigger": {"type": "slack", "event": "message", "channel_id": "<lookup: #gsk-rd-support>"},
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-rd-support-triage.md",
+      "output": "Thread reply with duplicate / triage / PR"
+    },
+    {
+      "name": "gsk-gxp-evidence-pack",
+      "demo": "Q5",
+      "trigger": {"type": "github", "event": "pull_request.opened", "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi"},
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-gxp-evidence-pack.md",
+      "output": "Draft CR, URS delta and traceability rows committed to the PR branch; summary PR comment"
+    }
+  ]
+}

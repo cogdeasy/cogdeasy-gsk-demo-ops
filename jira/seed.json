@@ -1,0 +1,53 @@
+{
+  "project": "GSK",
+  "issues": [
+    {
+      "ref": "Q1",
+      "type": "Bug",
+      "summary": "WEBAPI-DEMO-102: error mapper returns 500 / raw database text on data integrity violations",
+      "labels": ["webapi", "silver-tier"],
+      "trigger_label": "devin",
+      "description": "Two-line explainer: Saving a duplicate concept set or cohort in WebAPI can crash the error mapper (HTTP 500 from a NullPointerException) or return raw PostgreSQL text to the browser. Fix GenericExceptionMapper so clients always get a safe 409 and the database detail stays in the server log.\n\nComponent: org.ohdsi.webapi.util.GenericExceptionMapper (DataIntegrityViolationException branch).\n\nReproduce: ./reproduce.sh in cogdeasy/cogdeasy-gsk-ohdsi-webapi (exit 1 = bug present).\n\nAcceptance criteria:\nAC1 A DataIntegrityViolationException with no cause returns 409, not an exception from the mapper.\nAC2 One level of cause (no nested cause) returns 409.\nAC3 A nested cause whose message has no 'Detail:' marker returns 409 with a generic message and no raw database text (no SQL, no constraint name).\nAC4 A nested cause with a PostgreSQL 'Detail:' line returns 409 with only the detail text.\nAC5 Existing mappings (403, 404, 400, 501, 500) are unchanged.\nAC6 Regression tests cover AC1-AC5; full suite passes; build, tests and scan checks green.\nAC7 PR fills Ticket, URS delta, Test mapping and Change record sections. Merge waits for the named GSK approver."
+    },
+    {
+      "ref": "Q2-EPIC",
+      "type": "Epic",
+      "summary": "WebAPI security and test backlog (Trivy import)",
+      "labels": ["webapi", "backlog"],
+      "trigger_label": "devin-backlog",
+      "description": "Two-line explainer: Trivy findings on the built WebAPI WAR plus two maintenance items, worked as three parallel Devin sessions. Each child story is its own PR through build, tests and scan; people review output instead of typing it.\n\nChildren: Q2-SEC, Q2-BUG, Q2-COV."
+    },
+    {
+      "ref": "Q2-SEC",
+      "type": "Story",
+      "parent": "Q2-EPIC",
+      "summary": "Remove fixable CVEs: patch upgrades in direct dependencies",
+      "labels": ["webapi", "security"],
+      "description": "Two-line explainer: Close every Trivy finding on WebAPI.war that a patch-level upgrade of a direct dependency can fix, without a Spring Boot major upgrade. Rescan after each upgrade and report new findings introduced by the upgrade itself.\n\nAcceptance criteria:\nAC1 Import the scan CI publishes (scan job summary / code scanning) and list fixable-now CVEs with the direct dependency and target version.\nAC2 One commit per dependency family; build and tests green.\nAC3 Rescan shows zero new findings; report before/after counts by severity.\nAC4 CVEs that need the Boot 1.5 -> current upgrade are listed, not attempted."
+    },
+    {
+      "ref": "Q2-BUG",
+      "type": "Story",
+      "parent": "Q2-EPIC",
+      "summary": "Maintenance bug from the backlog (pick one reproducible defect in util)",
+      "labels": ["webapi", "bug"],
+      "description": "Two-line explainer: Fix one reproducible maintenance defect in org.ohdsi.webapi.util with a failing test first. Keep the diff minimal and explain the root cause in the PR.\n\nAcceptance criteria:\nAC1 Failing test committed before the fix.\nAC2 Root-cause fix, full suite green."
+    },
+    {
+      "ref": "Q2-COV",
+      "type": "Story",
+      "parent": "Q2-EPIC",
+      "summary": "Raise line and branch coverage on org.ohdsi.webapi.util",
+      "labels": ["webapi", "tests"],
+      "description": "Two-line explainer: Add behaviour-level unit tests for org.ohdsi.webapi.util and report the JaCoCo delta CI measures. No production code changes in this story.\n\nAcceptance criteria:\nAC1 Report line and branch coverage for the package before and after from target/site/jacoco.\nAC2 Tests assert behaviour, not implementation; full suite green."
+    },
+    {
+      "ref": "Q3",
+      "type": "Story",
+      "summary": "Z-code brief: ZEXCEL_TEMPLATE_GET_TYPES",
+      "labels": ["abap", "zcode"],
+      "trigger_label": "devin-abap",
+      "description": "Two-line explainer: Read the Z-report ZEXCEL_TEMPLATE_GET_TYPES as source and document it before anyone changes it. Analysis only: nothing is run in an SAP system.\n\nRepo: cogdeasy/cogdeasy-gsk-abap2xlsx, object src/not_cloud/zexcel_template_get_types.prog.abap.\n\nAcceptance criteria:\nAC1 docs/zcode/zexcel_template_get_types.md from docs/zcode/TEMPLATE.md.\nAC2 Dependency map: custom objects, function modules, SAP classes, DDIC tables; state FI/CO, MM, SD tables touched or none.\nAC3 S/4 risk rated for simplification items and clean core.\nAC4 Defects found by reading with file:line; one ABAP Unit test design per defect.\nAC5 abaplint stays at 0 issues."
+    }
+  ]
+}
