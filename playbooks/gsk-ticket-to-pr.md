@@ -25,8 +25,9 @@ that passes `build`, `tests` and `scan`, and hand it to the named GSK approver. 
 7. Run the new tests (green), then the full suite `mvn -B -Pwebapi-postgresql test`. Report
    run / passed / failures / errors / skipped from `python3 dev/ci/summary.py`, which totals
    unit (surefire) and integration (failsafe) reports.
-8. Verify the change end to end: re-run `./reproduce.sh` (exit 0 for error-mapper tickets) and
-   record the terminal run. This repo has no frontend (ATLAS is a separate app), so the
+8. Verify the change end to end: re-run the step-3 reproduction (`./reproduce.sh` exits 0 for
+   error-mapper tickets; otherwise the same command or test now passes) and record the terminal
+   run. This repo has no frontend (ATLAS is a separate app), so the
    terminal recording replaces the browser walkthrough; attach it to the PR.
 9. Branch `devin/<ticket-key-lowercase>-<slug>`, PR title `fix(<ticket>): ...`, and fill every
    PR template section: Ticket, URS delta, Test mapping (AC -> test -> before -> after), Change

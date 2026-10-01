@@ -14,9 +14,10 @@ in the GSK support Slack channel).
    tickets already being worked by Devin, such as the error-mapper bug) and issues labelled
    `rd-support` from the last 14 days. If triggered from Slack, also search the channel history
    for the last 14 days.
-2. If it duplicates an existing issue: on Jira, link the new report to the earliest matching
-   issue with the Duplicate link type so the new report "duplicates" it; comment with the
-   original key, its status and any open PR, and stop. A report that matches a bug already in
+2. If it duplicates an existing issue, respond with the original's Jira key and link, its status
+   and any open PR, then stop. For a Jira report, first link it to the earliest matching issue
+   with the Duplicate link type so the new report "duplicates" it, then comment. For a Slack
+   report, reply in the thread (no new Jira issue). A report that matches a bug already in
    progress joins that work; do not start a second fix.
 3. If new and the report came from Slack, create a GSK Jira Bug from it (summary, report text,
    link to the Slack message; no `rd-support` label, so the Jira trigger does not start a second
@@ -33,7 +34,9 @@ in the GSK support Slack channel).
 - Every report gets a response within the session: duplicate link, triage evidence, or PR.
   Jira reports get it as a ticket comment; Slack reports get it as a thread reply on the
   original message.
-- Validation: the report has a Duplicate link, an evidence comment, or a PR link.
+- Duplicate responses always name the original Jira key and link to it.
+- Validation: a Jira report has a Duplicate link, an evidence comment, or a PR link; a Slack
+  report has a thread reply with the original key, the new ticket key, or a PR link.
 
 ## Forbidden Actions
 - Do not close user reports; the owning team closes them.
