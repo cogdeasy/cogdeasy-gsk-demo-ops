@@ -28,7 +28,7 @@ GSK people at the gates. Pre-run the long beats; run Q1 live.
 3. **Q2:** while Q1 runs, open the Epic: triage table, three PRs, rescan and coverage numbers.
 4. **Q3:** open the Z-code brief PR. Point at the boundary line: analysis only.
 5. **Q4:** run `python3 support-sim/post_reports.py --target jira` and watch duplicates get
-   linked to R1/R2/R4. Show the R1 path joins the Q1 fix.
+   linked: R1 to the Q1 bug, R3/R5/R9 to R1, R6 to R2, R8 to R4. Show R1 joins the Q1 fix.
 6. **Q5:** back to the Q1 PR: evidence-pack comment, draft CR with blank reviewer, required
    reviewer block on the merge button.
 

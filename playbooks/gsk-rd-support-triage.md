@@ -13,7 +13,10 @@ GSK support Slack channel). Repo: cogdeasy/cogdeasy-gsk-ohdsi-webapi.
    issue with the Duplicate link type so the new report "duplicates" it; comment with the
    original key, its status and any open PR, and stop. A report that matches a bug already in
    progress joins that work; do not start a second fix.
-3. If new: clone the repo, `mvn -q test-compile`, reproduce (`./reproduce.sh` or a minimal
+3. If new and the report came from Slack, first create a GSK Jira Bug from it (summary, the
+   report text, a link to the Slack message; no `rd-support` label, so the Jira trigger does not
+   start a second session) and reply in the thread with the key. Steps 3 and 4 then use that
+   ticket. If new: clone the repo, `mvn -q test-compile`, reproduce (`./reproduce.sh` or a minimal
    test), find the likely code path, and post the evidence on the ticket: reproduction output,
    file and method, likely cause.
 4. If it is an in-scope bug with a clear fix, continue with the `gsk-ticket-to-pr` playbook
