@@ -1,7 +1,8 @@
 # Baseline on cogdeasy-gsk-ohdsi-webapi `main`
 
-Measured locally with JDK 8 (`mvn -B -Pwebapi-postgresql test`) on the scaffolding branch,
-before any demo ticket is worked. Re-measure from CI on the day and quote CI.
+Measured locally with JDK 8 (`mvn -B -Pwebapi-postgresql test`) on the scaffolding commit
+702a5949, now on `main` (`main` at a9c6c2b7 adds only a CI action pin), before any demo
+ticket is worked. Re-measure from CI on the day and quote CI.
 
 | metric | value |
 |---|---|
