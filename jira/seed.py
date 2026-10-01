@@ -5,6 +5,7 @@ Trigger labels are NOT applied: adding them is the live demo moment.
 
     python3 jira/seed.py --dry-run
     python3 jira/seed.py
+    python3 jira/seed.py --file jira/backlog.json --dry-run
 """
 from __future__ import annotations
 
@@ -43,9 +44,10 @@ def create(base: str, auth: str, fields: dict) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--file", type=Path, default=SEED)
     args = parser.parse_args()
 
-    seed = json.loads(SEED.read_text())
+    seed = json.loads(args.file.read_text())
     base = os.environ.get("JIRA_BASE_URL", "https://cog-gtm.atlassian.net").rstrip("/")
     auth = ""
     if not args.dry_run:
