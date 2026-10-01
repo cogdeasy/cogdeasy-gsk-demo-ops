@@ -18,11 +18,12 @@ for the human QA reviewer. Started by the `gsk-qa-review-prep` automation (GitHu
    finding.
 4. Check CI: `build`, `tests`, `scan` green on the head commit; new scan findings count.
 5. Draft `validation/changes/<key>/qa-review-checklist.md` from the template with each item
-   marked met / not met / n/a and the evidence link. Draft `deviation-capa.md` entries for
-   anything not met.
+   marked met / not met / n/a and the evidence link. The CI item is not marked in the file; it
+   reads "see the readiness comment", because committing the checklist creates a new head. Draft
+   `deviation-capa.md` entries for anything not met.
 6. Commit to the PR branch, wait for `build`, `tests` and `scan` to finish on the new head, then
-   post one comment: ready / not ready for QA sign-off, with that head's CI result and the gap
-   list.
+   post one comment: ready / not ready for QA sign-off, with that head's SHA and CI result and the
+   gap list. Any red check on the new head means not ready.
 
 ## Specifications
 - The checklist is a preparation for QA, not the QA decision.
