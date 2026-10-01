@@ -1,47 +1,73 @@
 # Track B demo runbook
 
-Five asks, one story: Devin works inside GSK's Jira, GitHub and CI, on GSK-style code, with
-GSK people at the gates. Pre-run the long beats; run Q1 live.
+One change, every role. The story follows a change from a scientist's rough request to an
+audited release, with each GSK role getting its moment, and the five video asks (Q1-Q5) as the
+spine. Validation route: CSA by default, full GAMP 5 CSV for high-risk changes. Role detail is in
+`docs/ROLES.md`; the Devin surfaces and how skills / plugins fit are in `docs/PLATFORM.md`.
 
-| ask | repo | trigger | live or pre-run | artefact to show |
-|---|---|---|---|---|
-| Q1 Agents in Jira, GitHub, CI | cogdeasy-gsk-ohdsi-webapi | Jira label `devin` on the WEBAPI-DEMO-102 bug | **live** (about 15-20 min, start it first) | Jira comment -> session -> PR with build/tests/scan + Devin Review |
-| Q2 Modernisation and backlog | cogdeasy-gsk-ohdsi-webapi | Jira label `devin-backlog` on the Epic | pre-run the day before | Epic summary, 3 PRs, scan before/after, JaCoCo delta |
-| Q3 SaaS/ERP and S/4HANA code | cogdeasy-gsk-abap2xlsx | Jira label `devin-abap` | pre-run | `docs/zcode/zexcel_template_get_types.md` PR |
-| Q4 Talent plus technology | cogdeasy-gsk-ohdsi-webapi | `support-sim/post_reports.py` -> Jira `rd-support` or Slack | live intake, pre-run triage as backup | duplicates linked under R1, triage evidence on new reports |
-| Q5 Governance for GxP | cogdeasy-gsk-ohdsi-webapi | PR opened (from Q1/Q2) | automatic on the Q1 PR | `validation/changes/CR-*.md`, traceability rows, CODEOWNERS gate |
+## The path
+
+| act | role(s) | what happens | trigger | ask | live / pre-run |
+|---|---|---|---|---|---|
+| 0 | R&D scientist, R&D support | Reports arrive; duplicates are linked, R1 joins the GSK-1 fix | `support-sim/post_reports.py --target jira` (label `rd-support`) | Q4 | live intake |
+| 1 | Business analyst | Rough request becomes AC, draft URS, impact, risk call | Jira label `devin-refine` | — | live (3-5 min) |
+| 2 | Architect | DeepWiki / Ask Devin on WebAPI and ABAP; Spring Boot 2.7 ADR | Ask Devin | — | live |
+| 3a | Software engineer, code reviewer | GSK-1: reproduce, red tests, fix, PR, CI, Devin Review | Jira label `devin` | Q1 | **live** (start first, 15-20 min) |
+| 3b | Engineers, AppSec | Epic fans out SEC / BUG / COV lanes in parallel | Epic label `devin-backlog` | Q2 | pre-run |
+| 3c | AppSec | Security Swarm findings with evidence; one finding to a fix PR | scan from app; label `devin-security` | Q2 | pre-run |
+| 3d | SAP / ABAP | Z-code brief, analysis only; S/4 readiness inventory | label `devin-abap` | Q3 | pre-run |
+| 3e | SAP, data migration lead | S/4 wave remediation on cogdeasy/gsk, one child and PR per object | Epic label `devin-migrate` | Q3 | pre-run |
+| 4 | Test engineer | Test design from URS, CSA record or OQ protocol with execution evidence | label `devin-test` | Q5 | pre-run |
+| 5 | CSV lead | PR opened -> risk gate -> document fan-out to child sessions | PR opened | Q5 | automatic on the Q1 PR |
+| 6 | QA approver | QA checklist pre-filled, gaps and deviations | PR label `ready-for-qa` | Q5 | live (2-3 min) |
+| 7 | Named approver, release manager | Approver merges; release notes, change-board pack, rollback plan | GitHub approval; label `devin-release` | Q5 | pre-run |
+| 7b | R&D scientist | Executes the PQ / UAT script Devin drafted | — | Q5 | show the script |
+| 8 | SRE / on-call | Alerts: duplicate of GSK-1, runbook case, noise, new | `oncall-sim/post_alert.py` -> webhook | Q4 | live |
+| 9 | Auditor | Inspection pack for GSK-1, request to approval | `api/start_audit_pack.sh GSK-1` (Devin API) | Q5 | pre-run, show live start |
+
+## Risk gate (act 5)
+
+| risk | route | documents (owner) |
+|---|---|---|
+| low | CSA, unscripted | risk assessment, CR, URS delta, trace, CSA test record (test), release notes |
+| medium | CSA, scripted for changed functions | + FS/DS delta, OQ protocol (test), PQ/UAT script (scientist), test summary report, QA checklist (QA) |
+| high | full CSV | + validation plan delta, IQ checklist, validation summary report (CSV lead), training note |
+
+GSK-1 rates medium (silver tier, error handling on data-integrity violations). The full matrix is
+in `validation/README.md` in the WebAPI repo.
 
 ## Day before
 
-1. `python3 jira/seed.py` (no trigger labels). Note the real issue keys.
-2. Add `devin-backlog` to the Epic and `devin-abap` to the Q3 story. Let them finish; review the
-   PRs, leave them open for the demo.
-3. Dry-run Q1 on a throwaway copy of the bug ticket. Time it. Close the PR without merging.
-4. Check `main` CI is green and the Devin blueprint snapshot has JDK 8 + a warm Maven cache.
+1. Board seeded (GSK-1..41 plus role tickets in `jira/roles.json`). Trigger labels are only added
+   on stage or in pre-runs.
+2. Pre-run: `devin-backlog` on GSK-2, `devin-abap` on GSK-3, `devin-migrate` on the S/4 wave
+   Epic, `devin-test` on the OQ test-design story, `devin-release` on the release Task, one
+   `devin-security` finding, the audit pack. Review the PRs; leave them open.
+3. Dry-run act 3a on a throwaway copy of GSK-1. Time it. Close the PR without merging.
+4. `main` CI green on WebAPI, abap2xlsx and gsk; WebAPI blueprint has JDK 8 and a warm Maven cache.
+5. Set `DEVIN_ONCALL_WEBHOOK_URL` for act 8 and `DEVIN_API_KEY` / `DEVIN_ORG_ID` for act 9.
 
 ## On the day
 
-1. Open: Jira board, the Q1 bug, GitHub PR list, Devin sessions list.
-2. **Q1:** add label `devin` to the bug. Narrate while it runs: trigger, own machine,
-   reproduce (`./reproduce.sh` exits 1), plan, red tests, fix, green, PR + CI, Devin Review.
-   Merge waits for the CODEOWNERS approver; do not merge on stage.
-3. **Q2:** while Q1 runs, open the Epic: triage table, three PRs, rescan and coverage numbers.
-4. **Q3:** open the Z-code brief PR. Point at the boundary line: analysis only.
-5. **Q4:** run `python3 support-sim/post_reports.py --target jira` and watch duplicates get
-   linked: R1 to the Q1 bug, R3/R5/R9 to R1, R6 to R2, R8 to R4. Show R1 joins the Q1 fix.
-6. **Q5:** back to the Q1 PR: evidence-pack comment, draft CR with blank reviewer, required
-   reviewer block on the merge button.
+1. Open: Jira board, GitHub PR lists, Devin sessions list, Automations page.
+2. Act 0, then act 3a straight away (it is the long one). Narrate acts 1, 2 and 3b-3e while it
+   runs.
+3. When the Q1 PR opens, act 5 fires by itself: show the risk result and the child sessions
+   writing the documents.
+4. Act 4 and 6 on the Q1 PR, act 7 from the pre-run, act 8 live, act 9 to close.
+5. The boundary line in every act: Devin drafts and proposes; GSK people accept, sign, approve,
+   merge and touch production.
 
 ## Numbers
 
 The video's figures (247 tests, 194 findings, 47.4% -> 64.4%, 384 lines, 5 defects, 7 URS,
-9 trace rows) are targets. Quote what CI and the sessions actually report on the day; the
-baseline numbers measured on `main` are in `docs/BASELINE.md`.
+9 trace rows) are targets. Quote what CI and the sessions report on the day; measured baselines
+are in `docs/BASELINE.md`.
 
 ## Prerequisites
 
-- Second GitHub user as the GSK approver, added to CODEOWNERS and branch protection on `main`
-  (required review, required checks build/tests/scan).
-- Devin Jira integration connected to cog-gtm with the GSK project.
-- Slack support channel (optional for Q4) with the Devin app invited; record its channel id in
-  `automations/automations.json`.
+- Second GitHub user as the GSK approver in CODEOWNERS, with branch protection on WebAPI `main`.
+- Devin Jira integration on cog-gtm; Atlassian MCP moved to the v2 endpoint.
+- Slack support channel with the Devin app invited (optional for act 0).
+- Devin Oncall is not set up in this org; act 8 uses a webhook automation.
+- Security Swarm scan started once from the app before the day (not scheduled; scans cost ACUs).

@@ -4,7 +4,12 @@
     {
       "name": "gsk-ticket-to-pr",
       "demo": "Q1",
-      "trigger": {"type": "jira", "event": "issue_label_added", "project": "GSK", "label": "devin"},
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "label": "devin"
+      },
       "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
       "playbook": "playbooks/gsk-ticket-to-pr.md",
       "output": "PR on the repo; PR link, test totals and status commented back on the Jira issue"
@@ -12,7 +17,13 @@
     {
       "name": "gsk-backlog-fanout",
       "demo": "Q2",
-      "trigger": {"type": "jira", "event": "issue_label_added", "project": "GSK", "issue_type": "Epic", "label": "devin-backlog"},
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "issue_type": "Epic",
+        "label": "devin-backlog"
+      },
       "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
       "playbook": "playbooks/gsk-backlog-fanout.md",
       "output": "Three child sessions (SEC, BUG, COV), three PRs, summary on the Epic",
@@ -21,7 +32,12 @@
     {
       "name": "gsk-zcode-reader",
       "demo": "Q3",
-      "trigger": {"type": "jira", "event": "issue_label_added", "project": "GSK", "label": "devin-abap"},
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "label": "devin-abap"
+      },
       "repo": "cogdeasy/cogdeasy-gsk-abap2xlsx",
       "playbook": "playbooks/gsk-zcode-reader.md",
       "output": "docs/zcode/<object>.md PR; counts commented on the Jira issue"
@@ -29,7 +45,12 @@
     {
       "name": "gsk-rd-support-triage-jira",
       "demo": "Q4",
-      "trigger": {"type": "jira", "event": "issue_created", "project": "GSK", "label": "rd-support"},
+      "trigger": {
+        "type": "jira",
+        "event": "issue_created",
+        "project": "GSK",
+        "label": "rd-support"
+      },
       "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
       "playbook": "playbooks/gsk-rd-support-triage.md",
       "output": "Duplicate link, triage evidence or fix PR on the Jira issue"
@@ -37,7 +58,11 @@
     {
       "name": "gsk-rd-support-triage-slack",
       "demo": "Q4",
-      "trigger": {"type": "slack", "event": "message", "channel_id": "<lookup: #gsk-rd-support>"},
+      "trigger": {
+        "type": "slack",
+        "event": "message",
+        "channel_id": "<lookup: #gsk-rd-support>"
+      },
       "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
       "playbook": "playbooks/gsk-rd-support-triage.md",
       "output": "Thread reply with duplicate / triage / PR"
@@ -45,10 +70,132 @@
     {
       "name": "gsk-gxp-evidence-pack",
       "demo": "Q5",
-      "trigger": {"type": "github", "event": "pull_request.opened", "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi"},
+      "trigger": {
+        "type": "github",
+        "event": "pull_request.opened",
+        "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi"
+      },
       "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
       "playbook": "playbooks/gsk-gxp-evidence-pack.md",
-      "output": "Draft CR, URS delta and traceability rows committed to the PR branch; summary PR comment"
+      "output": "Risk assessment, CSA or CSV route, document fan-out to child sessions on the PR branch; summary PR comment",
+      "notes": "Needs child-session approval bypass for the document fan-out."
+    },
+    {
+      "name": "gsk-refine",
+      "demo": "Act 1 (BA)",
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "label": "devin-refine"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-refine.md",
+      "output": "Refinement comment (AC, URS draft, impact, risk call); label refined-draft"
+    },
+    {
+      "name": "gsk-test-design",
+      "demo": "Act 4 (test engineer)",
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "label": "devin-test"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-test-design.md",
+      "output": "Tests-only PR plus CSA record or OQ protocol with execution evidence"
+    },
+    {
+      "name": "gsk-qa-review-prep",
+      "demo": "Act 6 (QA)",
+      "trigger": {
+        "type": "github",
+        "event": "pull_request.labeled",
+        "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+        "label": "ready-for-qa"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-qa-review-prep.md",
+      "output": "QA checklist and deviation drafts on the PR branch; ready / not ready comment"
+    },
+    {
+      "name": "gsk-release-pack",
+      "demo": "Act 7 (release manager)",
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "label": "devin-release"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-release-pack.md",
+      "output": "Release notes, change-board pack, deploy and rollback plan PR; go / no-go comment"
+    },
+    {
+      "name": "gsk-security-remediation",
+      "demo": "Act 3 (AppSec)",
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "label": "devin-security"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-security-remediation.md",
+      "output": "One fix PR per finding with scan delta, or a risk-acceptance draft"
+    },
+    {
+      "name": "gsk-security-scan-weekly",
+      "demo": "Act 3 (AppSec)",
+      "trigger": {
+        "type": "schedule",
+        "rrule": "weekly"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "action": "start_code_scan (security, lite) with the profile from security/scan-profile.md",
+      "output": "Security Swarm findings with evidence",
+      "notes": "Not created: scans cost ACUs; create only if GSK wants a recurring scan. A one-off scan from the app is enough for the demo."
+    },
+    {
+      "name": "gsk-s4-remediation-wave",
+      "demo": "Act 3 (SAP / migrations)",
+      "trigger": {
+        "type": "jira",
+        "event": "issue_label_added",
+        "project": "GSK",
+        "issue_type": "Epic",
+        "label": "devin-migrate"
+      },
+      "repo": "cogdeasy/gsk",
+      "playbook": "playbooks/gsk-s4-remediation-wave.md",
+      "output": "One remediation PR per ABAP object; wave summary on the Epic",
+      "notes": "Needs child-session approval bypass."
+    },
+    {
+      "name": "gsk-oncall-triage",
+      "demo": "Act 8 (SRE)",
+      "trigger": {
+        "type": "webhook",
+        "event": "incoming",
+        "source": "oncall-sim/post_alert.py or the monitoring tool"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-oncall-triage.md",
+      "output": "Comment on known issue, new Bug, runbook step or suppression recommendation",
+      "notes": "Devin Oncall responders are not set up in this org; this webhook automation stands in. The webhook URL and secret go in DEVIN_ONCALL_WEBHOOK_URL."
+    },
+    {
+      "name": "gsk-audit-pack (API)",
+      "demo": "Act 9 (auditor)",
+      "trigger": {
+        "type": "api",
+        "script": "api/start_audit_pack.sh <key>"
+      },
+      "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+      "playbook": "playbooks/gsk-audit-pack.md",
+      "output": "Inspection pack and gap list returned from the session",
+      "notes": "Not an automation: started through the Devin API v3 to show integration from GSK tooling."
     }
   ]
 }
