@@ -1,0 +1,576 @@
+{
+  "project": "GSK",
+  "note": "Background backlog that makes the GSK board look like an active team. Not part of the scripted demo (seed.json, GSK-1..GSK-6). No trigger labels (devin, devin-backlog, devin-abap, rd-support). 'In Review' is not a status in the GSK workflow: those issues are In Progress with label in-review. The project has no story points field; 'points' is kept here for reference.",
+  "issues": [
+    {
+      "ref": "E-BOOT2",
+      "type": "Epic",
+      "summary": "ATLAS 2.x / WebAPI Spring Boot 2 upgrade readiness",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "tech-debt"
+      ],
+      "assignee": null,
+      "description": "Get WebAPI ready to move from Spring Boot 1.5 / Java 8 to Spring Boot 2.x and Java 11 without changing behaviour.\nBoot 1.5 is out of support, and every later dependency, ATLAS release and hosting change assumes Boot 2.\n\nScope: inventory of Boot 1.5 auto-configuration, Jersey and Shiro wiring, Flyway 4.2 history, Hikari settings and Java 11 build. Out of scope: the Boot 2 cut-over itself and dependency CVE remediation (tracked separately).\n\nExit criteria:\nAC1 Every Boot 1.5-specific property and auto-config used by WebAPI is listed with its Boot 2 equivalent.\nAC2 CI builds and tests WebAPI on Java 8 and Java 11.\nAC3 Flyway history validates on a copy of the production schema with the target Flyway version."
+    },
+    {
+      "ref": "E-VOCAB",
+      "type": "Epic",
+      "summary": "OMOP CDM v5.4 vocabulary refresh",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "vocabulary"
+      ],
+      "assignee": null,
+      "description": "Move ATLAS/WebAPI sources from the CDM v5.3 vocabulary to the CDM v5.4 Athena release used by the R&D data platform.\nResearchers need current SNOMED, RxNorm and LOINC content, and new studies are specified against v5.4 concepts.\n\nScope: load and validate the new vocabulary, concept set resolution changes in ConceptSetService, per-source vocabulary version display and an impact report on saved cohort definitions.\n\nExit criteria:\nAC1 All production sources report the new vocabulary version in /source/sources.\nAC2 Cohort definitions that reference deprecated or remapped concepts are listed with owners.\nAC3 Vocabulary refresh change record approved."
+    },
+    {
+      "ref": "E-P11",
+      "type": "Epic",
+      "summary": "Audit trail and 21 CFR Part 11 hardening",
+      "status": "In Progress",
+      "priority": "Highest",
+      "labels": [
+        "webapi",
+        "gxp",
+        "security"
+      ],
+      "assignee": null,
+      "description": "Strengthen WebAPI audit trail, session and signature controls so it meets GSK's 21 CFR Part 11 expectations for a silver-tier application.\nToday AuditTrailService writes to a log file only, so QA cannot show a complete, tamper-evident record of who changed a cohort definition and when.\n\nScope: persisted audit events, audit export for QA, JWT session limits, re-authentication before publishing, URS and traceability updates in validation/.\n\nExit criteria:\nAC1 Create/update/delete of cohort definitions and concept sets produce persisted audit events with user, timestamp and before/after hash.\nAC2 QA can export the audit trail for a date range without database access.\nAC3 URS delta, traceability rows and change record approved by the named GSK approver."
+    },
+    {
+      "ref": "E-S4",
+      "type": "Epic",
+      "summary": "SAP custom-code S/4 readiness (abap2xlsx consumers)",
+      "status": "In Progress",
+      "priority": "Medium",
+      "labels": [
+        "abap",
+        "s4hana",
+        "tech-debt"
+      ],
+      "assignee": null,
+      "description": "Make sure GSK's ECC Z-programs that build or read Excel through abap2xlsx keep working after the S/4HANA move.\nFinance and supply reports depend on ZCL_EXCEL_WRITER_2007 and ZCL_EXCEL_READER_2007, and some callers use APIs that are not released for clean core.\n\nScope: inventory of abap2xlsx consumers, clean-core replacements for unreleased APIs, reader/writer defects found during readiness analysis. Analysis and source fixes only; no Basis work or conversion.\n\nExit criteria:\nAC1 Every consumer Z-program is rated for S/4 simplification and clean-core risk.\nAC2 High-risk calls have a released-API replacement or an accepted exemption.\nAC3 abaplint stays at 0 issues."
+    },
+    {
+      "ref": "S-BOOTINV",
+      "type": "Story",
+      "summary": "Inventory Boot 1.5 auto-configuration, Jersey and Shiro wiring for the Boot 2 move",
+      "parent": "E-BOOT2",
+      "status": "Done",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "tech-debt"
+      ],
+      "points": 5,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "List every Spring Boot 1.5 auto-configuration, property and starter WebAPI relies on, including JerseyConfig and ShiroConfiguration.\nThe Boot 2 migration can only be estimated once we know exactly which behaviours change underneath us.\n\nAcceptance criteria:\nAC1 docs/boot2-inventory.md lists each starter, auto-config class and application.properties key with its Boot 2 name or removal note.\nAC2 JerseyConfig, ShiroConfiguration, FlywayConfig and DataAccessConfig are each covered with the beans they define.\nAC3 Items that need code change (not just a property rename) are tagged and sized.",
+      "comment": "Inventory merged. 41 properties rename cleanly, 6 need code changes (mostly ShiroConfiguration filter registration and the Jersey servlet path). Sized the follow-ups on the Epic."
+    },
+    {
+      "ref": "S-HIKARI",
+      "type": "Story",
+      "summary": "Size Hikari pool per source and expose pool metrics over JMX",
+      "parent": "E-BOOT2",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "performance"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Tune the spring.datasource.hikari.* settings for the WebAPI schema and each CDM source, and publish pool usage metrics.\nPool sizing is a single default today, so a busy CDM source can starve the WebAPI schema and we cannot see it happening.\n\nAcceptance criteria:\nAC1 maximum-pool-size, minimum-idle and connection-timeout are set per environment in the profile, with the reasoning documented.\nAC2 Active, idle and pending connection counts are visible over JMX (register-mbeans) and on the WebAPI Grafana dashboard.\nAC3 Load test with 20 concurrent generations shows no connection-timeout errors.",
+      "comment": "Pool MBeans are registered in dev. Load test at 20 concurrent generations peaks at 14 active connections; proposing max 24 / min idle 4 for prod."
+    },
+    {
+      "ref": "S-FLYWAY",
+      "type": "Story",
+      "summary": "Flyway 4.2 to 6.x path: baseline checksums for existing schema history",
+      "parent": "E-BOOT2",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "webapi",
+        "tech-debt"
+      ],
+      "points": 8,
+      "assignee": null,
+      "description": "Prove that the existing flyway_schema_history in the WebAPI schema validates under the Flyway version Boot 2 brings in.\nFlyway 5+ changes the history table name and checksum handling, and a failed validate on start-up would take ATLAS down.\n\nAcceptance criteria:\nAC1 Migration from schema_version to flyway_schema_history is scripted and tested on a copy of the production schema.\nAC2 flyway validate passes on that copy with validateOnMigrate=true.\nAC3 Rollback steps are written up in validation/rollback/."
+    },
+    {
+      "ref": "S-JAVA11",
+      "type": "Story",
+      "summary": "Build and test WebAPI on Java 11 in CI alongside Java 8",
+      "parent": "E-BOOT2",
+      "status": "In Review",
+      "priority": "Medium",
+      "labels": [
+        "webapi",
+        "tech-debt",
+        "in-review"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Add a Java 11 leg to the CI workflow so build and tests run on both JDKs for every PR.\nBoot 2 work needs early warning of Java 11 incompatibilities instead of finding them in one big-bang branch.\n\nAcceptance criteria:\nAC1 ci.yml runs build and tests on Java 8 and Java 11 with the webapi-postgresql profile.\nAC2 The Java 11 leg is required once it has been green for five consecutive main builds.\nAC3 Known Java 11 failures are listed as follow-up tickets, not skipped silently.",
+      "comment": "PR is up. Java 11 leg is green except two JAXB-related test classes; raised follow-ups rather than skipping them."
+    },
+    {
+      "ref": "B-HIKARILEAK",
+      "type": "Bug",
+      "summary": "Hikari connections leak when an estimation execution is cancelled",
+      "parent": "E-BOOT2",
+      "status": "In Progress",
+      "priority": "Highest",
+      "labels": [
+        "webapi",
+        "performance"
+      ],
+      "points": 5,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Cancelling a running estimation or prediction execution leaves its JDBC connection checked out of the Hikari pool.\nAfter a handful of cancels the pool is exhausted and every WebAPI request waits for connection-timeout.\n\nSteps to reproduce:\n1. Start an estimation execution against a CDM source.\n2. Cancel it from the Executions tab while the SQL step is running.\n3. Repeat until the number of cancels equals maximum-pool-size.\n4. Call GET /WebAPI/info: it times out after connection-timeout.\n\nAcceptance criteria:\nAC1 Cancelling an execution returns its connection to the pool within 5 seconds.\nAC2 Hikari leak detection reports no leaks for the cancel path in the integration test.\nAC3 Regression test covers cancel during the SQL step and during the R step.",
+      "comment": "Reproduced locally with pool size 4: four cancels and /info hangs. The cancel path interrupts the job thread before the JdbcTemplate callback closes its connection. Fix in progress."
+    },
+    {
+      "ref": "T-SPRINGPROF",
+      "type": "Task",
+      "summary": "Remove unused Spring profiles and Oracle/SQL Server-only packaging from the GSK build",
+      "parent": "E-BOOT2",
+      "status": "To Do",
+      "priority": "Low",
+      "labels": [
+        "webapi",
+        "tech-debt"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "Strip the Maven profiles and Flyway locations GSK never deploys (Oracle, SQL Server, Redshift) from the GSK packaging.\nThey add noise to the Boot 2 inventory and to the Trivy scan of the WAR.\n\nAcceptance criteria:\nAC1 Only webapi-postgresql is used by CI and documented in AGENTS.md.\nAC2 WAR contents compared before/after; no runtime class removed that PostgreSQL uses."
+    },
+    {
+      "ref": "S-VOCABLOAD",
+      "type": "Story",
+      "summary": "Load OMOP CDM v5.4 vocabulary bundle into the staging vocabulary schema",
+      "parent": "E-VOCAB",
+      "status": "Done",
+      "priority": "High",
+      "labels": [
+        "vocabulary",
+        "webapi"
+      ],
+      "points": 5,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Download the Athena v5.4 vocabulary bundle and load it into the staging vocab schema used by the ATLAS test source.\nEvery other vocabulary story needs the new content in place to test against.\n\nAcceptance criteria:\nAC1 CONCEPT, CONCEPT_RELATIONSHIP, CONCEPT_ANCESTOR and VOCABULARY row counts match the Athena manifest.\nAC2 vocabulary_version in VOCABULARY reports the new release.\nAC3 Load script and checksums are stored with the change record.",
+      "comment": "Loaded into vocab_v54_stg. Row counts match the manifest; CONCEPT_ANCESTOR took 2h10m on the staging instance, worth knowing for the prod window."
+    },
+    {
+      "ref": "S-CSRESOLVE",
+      "type": "Story",
+      "summary": "ConceptSetService: resolve expressions against v5.4 'Maps to value' relationships",
+      "parent": "E-VOCAB",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": [
+        "vocabulary",
+        "webapi"
+      ],
+      "points": 8,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Update concept set expression resolution so 'include mapped' also follows the v5.4 'Maps to value' relationship where the study asks for it.\nMeasurement and observation concept sets built on v5.4 under-count patients if value mappings are ignored.\n\nAcceptance criteria:\nAC1 Resolving a concept set with includeMapped=true returns the same concepts as before plus 'Maps to value' targets when the new flag is set.\nAC2 Existing concept sets resolve to identical concept lists when the flag is not set (regression test on 20 saved sets).\nAC3 The behaviour is described in the URS delta.",
+      "comment": "Resolution change is behind a per-request flag so existing sets resolve unchanged. Regression set of 20 saved concept sets is green; working on the URS wording."
+    },
+    {
+      "ref": "S-VOCABVER",
+      "type": "Story",
+      "summary": "Show vocabulary version per source in SourceController /source/sources",
+      "parent": "E-VOCAB",
+      "status": "In Review",
+      "priority": "Medium",
+      "labels": [
+        "vocabulary",
+        "webapi",
+        "in-review"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Return each source's vocabulary_version from the VOCABULARY table in the /source/sources response.\nDuring the refresh researchers need to see which sources are already on v5.4 before they generate a cohort.\n\nAcceptance criteria:\nAC1 GET /source/sources includes vocabularyVersion for every source with a vocabulary daimon.\nAC2 The value is cached and refreshed when the source cache is evicted.\nAC3 Sources without a vocabulary daimon return null, not an error.",
+      "comment": "PR open. Value is read through the existing source cache so it costs one query per source per eviction."
+    },
+    {
+      "ref": "S-VOCABIMPACT",
+      "type": "Story",
+      "summary": "Impact report: saved cohort definitions using concepts deprecated by the refresh",
+      "parent": "E-VOCAB",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "vocabulary",
+        "webapi"
+      ],
+      "points": 5,
+      "assignee": null,
+      "description": "Produce a report of saved cohort definitions and concept sets that reference concepts deprecated or remapped in v5.4.\nStudy owners have to review those definitions before results generated on the new vocabulary are trusted.\n\nAcceptance criteria:\nAC1 Report lists definition id, name, owner, affected concept ids and the replacement concept where one exists.\nAC2 Report runs against any source with a vocabulary daimon in under 10 minutes.\nAC3 Owners are notified with a link to the report."
+    },
+    {
+      "ref": "T-VOCABWINDOW",
+      "type": "Task",
+      "summary": "Agree the production vocabulary refresh window with R&D data engineering",
+      "parent": "E-VOCAB",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "vocabulary"
+      ],
+      "points": 1,
+      "assignee": null,
+      "description": "Book a maintenance window with data engineering and the ATLAS user community for the production vocabulary load.\nThe CONCEPT_ANCESTOR load takes over two hours and cohort generation must be paused while it runs.\n\nAcceptance criteria:\nAC1 Window agreed and published to ATLAS users at least five working days ahead.\nAC2 Rollback point (schema snapshot) confirmed with the DBA team."
+    },
+    {
+      "ref": "B-PATHWAY",
+      "type": "Bug",
+      "summary": "Pathway analysis merges event cohorts that start on the same day into one step",
+      "parent": "E-VOCAB",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "webapi"
+      ],
+      "points": 3,
+      "assignee": null,
+      "description": "When two event cohorts start on the same date for a person, the pathway result shows a single combined step with the wrong label.\nTreatment pathway figures in study reports are wrong for patients who start combination therapy.\n\nSteps to reproduce:\n1. Create a pathway analysis with target cohort T2DM and event cohorts Metformin and Sitagliptin.\n2. Generate on a source where a person starts both drugs on the same date.\n3. Open the sunburst: the step shows only one drug name.\n\nAcceptance criteria:\nAC1 Same-day events appear as a combination step labelled with both cohort names.\nAC2 Sequential events on different days are unchanged.\nAC3 Regression test with a two-person fixture covers both cases."
+    },
+    {
+      "ref": "S-AUDITPERSIST",
+      "type": "Story",
+      "summary": "Persist AuditTrailService events to a tamper-evident audit table",
+      "parent": "E-P11",
+      "status": "In Progress",
+      "priority": "Highest",
+      "labels": [
+        "webapi",
+        "gxp",
+        "security"
+      ],
+      "points": 8,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Write the events AuditTrailAspect already captures to an append-only database table with a hash chain, not just the log file.\nQA needs a complete record of who changed what and when that survives log rotation and cannot be edited silently.\n\nAcceptance criteria:\nAC1 Create, update and delete on cohort definitions and concept sets each write one audit row with user, timestamp, entity id and before/after hash.\nAC2 Each row stores the hash of the previous row; a verification query detects any edited or deleted row.\nAC3 The application database user has INSERT and SELECT only on the audit table.\nAC4 Log-file audit output is unchanged.",
+      "comment": "Table and hash chain are in; listener wiring for CohortDefinitionService is on a branch. Concept set events next."
+    },
+    {
+      "ref": "S-JWTEXP",
+      "type": "Story",
+      "summary": "Shiro JWT filter: enforce token expiry and a configurable maximum session age",
+      "parent": "E-P11",
+      "status": "In Review",
+      "priority": "Highest",
+      "labels": [
+        "webapi",
+        "security",
+        "gxp",
+        "in-review"
+      ],
+      "points": 5,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Make AtlasJwtAuthFilter reject expired tokens and cap total session age, with both limits set in configuration.\nPart 11 expects sessions to end after inactivity, and today a refreshed token can keep a session alive indefinitely.\n\nAcceptance criteria:\nAC1 A token past its exp claim returns 401 and the UI prompts for login.\nAC2 Refresh is refused once the session is older than security.maxSessionAge.\nAC3 Both limits are configurable and documented in the URS delta.\nAC4 Unit tests cover expired, valid and over-age tokens.",
+      "comment": "PR in review with the security architect. Default max session age 12h, idle timeout 30m, both overridable per environment."
+    },
+    {
+      "ref": "S-ESIG",
+      "type": "Story",
+      "summary": "Re-authenticate (electronic signature) before publishing a cohort definition",
+      "parent": "E-P11",
+      "status": "To Do",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "gxp"
+      ],
+      "points": 8,
+      "assignee": null,
+      "description": "Require the user to re-enter credentials and a reason before a cohort definition is marked as published for a study.\nA published definition drives regulatory outputs, so its approval must be an attributable electronic signature.\n\nAcceptance criteria:\nAC1 Publishing requires a fresh authentication within the last 60 seconds and a reason text.\nAC2 The signature (user, time, meaning, reason) is stored with the audit event and shown in the definition history.\nAC3 Failed re-authentication is audited and does not publish."
+    },
+    {
+      "ref": "S-AUDITEXPORT",
+      "type": "Story",
+      "summary": "Audit trail export for QA: date range, CSV, read-only role",
+      "parent": "E-P11",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "webapi",
+        "gxp"
+      ],
+      "points": 5,
+      "assignee": null,
+      "description": "Add an endpoint and ATLAS button that exports audit events for a date range to CSV for users with a new read-only QA role.\nInspection requests today need a DBA query, which is slow and itself not audited.\n\nAcceptance criteria:\nAC1 GET /audit/export?from=&to= returns CSV with one row per event and the hash-chain verification status.\nAC2 Only users with the qa-auditor role can call it; calls are themselves audited.\nAC3 Exports over 100k rows stream without loading everything into memory."
+    },
+    {
+      "ref": "B-ROLECACHE",
+      "type": "Bug",
+      "summary": "Role permission changes not applied until restart: Shiro authorization cache not evicted",
+      "parent": "E-P11",
+      "status": "Done",
+      "priority": "Highest",
+      "labels": [
+        "webapi",
+        "security"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Removing a permission from a role through the Roles page has no effect for logged-in users until WebAPI restarts.\nAccess revocation must take effect immediately for a GxP application.\n\nSteps to reproduce:\n1. Log in as a user in role 'study-analyst'.\n2. As admin, remove cohortdefinition:*:put from that role.\n3. As the user, save a cohort definition: it still succeeds.\n\nAcceptance criteria:\nAC1 Updating role permissions evicts the authorization cache for every user in that role.\nAC2 A user who loses a permission gets 403 on the next request without logging out.\nAC3 Integration test covers add and remove of a permission.",
+      "comment": "Fixed: role/permission updates now evict the Shiro authorization cache for affected users. Verified in UAT with the access-management team; change record closed."
+    },
+    {
+      "ref": "T-URSAUDIT",
+      "type": "Task",
+      "summary": "Update URS and traceability matrix for audit-trail requirements URS-AUD-01..06",
+      "parent": "E-P11",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": [
+        "gxp"
+      ],
+      "points": 2,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Write the audit trail, session and e-signature requirements into validation/urs-delta.md and add rows to validation/traceability.csv.\nEvery story in the Epic has to trace to an approved requirement before its change record can close.\n\nAcceptance criteria:\nAC1 URS-AUD-01..06 written with acceptance tests named.\nAC2 traceability.csv links each requirement to its story and test class.\nAC3 QA reviewer has signed off the wording."
+    },
+    {
+      "ref": "T-JWTAUDIT",
+      "type": "Task",
+      "summary": "Document current Shiro realms and auth filters in validation/ before Part 11 changes",
+      "parent": "E-P11",
+      "status": "Done",
+      "priority": "Medium",
+      "labels": [
+        "webapi",
+        "gxp",
+        "security"
+      ],
+      "points": 2,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Record how JwtAuthRealm, AtlasJwtAuthFilter and the LDAP/OAuth realms are configured in each GSK environment.\nThe as-is description is the baseline the Part 11 change records compare against.\n\nAcceptance criteria:\nAC1 One page per environment listing realms, filters and their order.\nAC2 Reviewed by the security architect."
+    },
+    {
+      "ref": "S-ABAPINV",
+      "type": "Story",
+      "summary": "Inventory GSK Z-programs that call ZCL_EXCEL_WRITER_2007 / ZCL_EXCEL_READER_2007",
+      "parent": "E-S4",
+      "status": "Done",
+      "priority": "High",
+      "labels": [
+        "abap",
+        "s4hana"
+      ],
+      "points": 5,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "List every ECC Z-program and function module that creates or reads Excel files through abap2xlsx, with owner and run frequency.\nWe cannot plan S/4 remediation for abap2xlsx consumers until we know who they are.\n\nAcceptance criteria:\nAC1 Inventory lists object name, owning team, last run date and the abap2xlsx classes used.\nAC2 Each entry is rated low/medium/high for S/4 simplification and clean-core risk.\nAC3 Objects with no runs in 12 months are flagged for retirement.",
+      "comment": "Inventory complete: 37 consumers, 9 not run in 12 months (proposed for retirement), 6 rated high clean-core risk because they call GUI download APIs directly."
+    },
+    {
+      "ref": "S-ABAPDOWNLOAD",
+      "type": "Story",
+      "summary": "Replace direct CL_GUI_FRONTEND_SERVICES downloads in abap2xlsx consumers with a released-API wrapper",
+      "parent": "E-S4",
+      "status": "To Do",
+      "priority": "High",
+      "labels": [
+        "abap",
+        "s4hana"
+      ],
+      "points": 8,
+      "assignee": null,
+      "description": "Introduce one wrapper class for saving generated XLSX files and move the six high-risk consumers onto it.\nDirect GUI download calls are not clean-core compliant and do not work from background jobs in S/4.\n\nAcceptance criteria:\nAC1 Wrapper offers frontend download and application-server/ BTP destination targets behind one method.\nAC2 The six high-risk consumers use the wrapper; output files are byte-identical in ECC.\nAC3 abaplint stays at 0 issues; ABAP Unit tests designed for the wrapper."
+    },
+    {
+      "ref": "B-READERRICH",
+      "type": "Bug",
+      "summary": "ZCL_EXCEL_READER_2007 drops text after the first run in rich-text shared strings",
+      "parent": "E-S4",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "abap"
+      ],
+      "points": 3,
+      "assignee": null,
+      "description": "When a cell's shared string has several formatting runs (e.g. part bold), only the first run's text is read.\nSupply-planning uploads from Excel 365 lose part of the material description and fail validation downstream.\n\nSteps to reproduce:\n1. In Excel 365, type 'Paracetamol 500mg' in A1 and make '500mg' bold; save as XLSX.\n2. Load the file with ZCL_EXCEL_READER_2007->load_file.\n3. Read A1 with ZCL_EXCEL_WORKSHEET->get_cell: value is 'Paracetamol '.\n\nAcceptance criteria:\nAC1 Cells with multiple <r> runs return the concatenated text of all runs.\nAC2 Plain shared strings are unchanged.\nAC3 ABAP Unit test designed with a two-run fixture (to run on a GSK system)."
+    },
+    {
+      "ref": "B-WRITERDATE",
+      "type": "Bug",
+      "summary": "ZCL_EXCEL_WRITER_2007 writes dates as plain numbers when no explicit cell style is set",
+      "parent": "E-S4",
+      "status": "To Do",
+      "priority": "Low",
+      "labels": [
+        "abap"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "Date values written through set_cell without a style appear as serial numbers (e.g. 46022) when the file is opened.\nFinance users reformat columns by hand in several month-end reports.\n\nSteps to reproduce:\n1. Call ZCL_EXCEL_WORKSHEET->set_cell with ip_value of type d and no ip_style.\n2. Write the workbook with ZCL_EXCEL_WRITER_2007.\n3. Open in Excel: the cell shows a number, not a date.\n\nAcceptance criteria:\nAC1 Cells typed as date get a default date number format when no style is supplied.\nAC2 Explicit styles still take precedence.\nAC3 ABAP Unit test designed for both cases."
+    },
+    {
+      "ref": "B-FORMULA",
+      "type": "Bug",
+      "summary": "ZCL_EXCEL_WORKSHEET truncates formulas longer than 255 characters",
+      "parent": "E-S4",
+      "status": "To Do",
+      "priority": "Low",
+      "labels": [
+        "abap"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "set_cell with ip_formula silently cuts the formula at 255 characters, producing a broken formula in the output.\nTwo controlling reports build long SUMIFS formulas and show #NAME? errors.\n\nSteps to reproduce:\n1. Build a 300-character SUMIFS formula string.\n2. Call set_cell with ip_formula on A1 and write the file.\n3. Open in Excel: formula is cut off and shows #NAME?.\n\nAcceptance criteria:\nAC1 Formulas up to Excel's 8192-character limit are written intact.\nAC2 Longer formulas raise ZCX_EXCEL with a clear message instead of truncating."
+    },
+    {
+      "ref": "T-UATOWNERS",
+      "type": "Task",
+      "summary": "Map abap2xlsx report outputs to business owners for S/4 UAT sign-off",
+      "parent": "E-S4",
+      "status": "To Do",
+      "priority": "Low",
+      "labels": [
+        "abap",
+        "s4hana"
+      ],
+      "points": 1,
+      "assignee": null,
+      "description": "Name a business owner for each Excel output in the consumer inventory and agree how they will sign off in S/4 UAT.\nWithout named owners, regression testing of report layouts stalls in the S/4 test cycles.\n\nAcceptance criteria:\nAC1 Every active consumer has a named owner and a sample output file.\nAC2 Owners have confirmed the UAT window."
+    },
+    {
+      "ref": "B-SOURCEDEL",
+      "type": "Bug",
+      "summary": "SourceController: deleted source stays in the source cache until restart",
+      "status": "To Do",
+      "priority": "High",
+      "labels": [
+        "webapi"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "After an admin deletes a source, its daimons stay cached and ATLAS still lists it; selecting it fails.\nAdmins remove decommissioned CDM sources and users keep trying to run analyses against them.\n\nSteps to reproduce:\n1. As admin, create source TEST_CDM and refresh /source/sources.\n2. Delete TEST_CDM via DELETE /source/{id}.\n3. Call GET /source/sources: TEST_CDM is still listed.\n\nAcceptance criteria:\nAC1 Deleting a source evicts it from the source cache and from /source/sources immediately.\nAC2 Requests for the deleted source key return 404 with a safe message.\nAC3 Integration test covers create, delete and list."
+    },
+    {
+      "ref": "T-GRAFANA",
+      "type": "Task",
+      "summary": "Grafana dashboard for WebAPI JVM heap, Hikari pool and request latency",
+      "status": "Done",
+      "priority": "Medium",
+      "labels": [
+        "webapi",
+        "performance"
+      ],
+      "points": 2,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Build a Grafana dashboard from the existing JMX exporter covering heap, GC, Hikari pool and Jersey request latency.\nSupport needs one place to look when ATLAS users report slowness.\n\nAcceptance criteria:\nAC1 Dashboard published in the R&D platform Grafana folder.\nAC2 Alert on pool pending connections > 0 for 5 minutes routed to the WebAPI on-call.",
+      "comment": "Dashboard is live in the R&D platform folder; pending-connection alert routed to WebAPI on-call."
+    },
+    {
+      "ref": "B-ARACHNE",
+      "type": "Bug",
+      "summary": "Arachne export of an estimation analysis omits negative control outcome cohorts",
+      "parent": "E-BOOT2",
+      "status": "Done",
+      "priority": "Medium",
+      "labels": [
+        "webapi"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Exporting an estimation design for Arachne leaves out the negative control outcome cohort definitions.\nThe exported study package fails on the partner site because referenced cohorts are missing.\n\nSteps to reproduce:\n1. Open an estimation analysis that has negative control outcomes.\n2. Export for Arachne.\n3. Unzip the package: negative control cohorts are not in cohorts/.\n\nAcceptance criteria:\nAC1 Exported package contains every cohort referenced by the design, including negative controls.\nAC2 Package validates with the Arachne import checker.\nAC3 Regression test asserts the cohort list in the export."
+    },
+    {
+      "ref": "ST-AUDIT-DDL",
+      "type": "Subtask",
+      "summary": "Flyway migration: audit_event table and hash-chain columns",
+      "parent": "S-AUDITPERSIST",
+      "status": "Done",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "gxp"
+      ],
+      "points": 2,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Add the Flyway migration that creates audit_event with previous_hash and row_hash columns.\nThe persistence story needs the table before the listener can write to it.\n\nAcceptance criteria:\nAC1 Migration runs cleanly on an empty schema and on a copy of production.\nAC2 Application user has INSERT/SELECT only."
+    },
+    {
+      "ref": "ST-AUDIT-LISTENER",
+      "type": "Subtask",
+      "summary": "Wire audit listener into CohortDefinitionService and ConceptSetService save/delete",
+      "parent": "S-AUDITPERSIST",
+      "status": "In Review",
+      "priority": "High",
+      "labels": [
+        "webapi",
+        "gxp",
+        "in-review"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Hook the audit listener into the save and delete paths of CohortDefinitionService and ConceptSetService.\nThese are the two entities QA named as in scope for the first inspection.\n\nAcceptance criteria:\nAC1 Save and delete each write exactly one audit row.\nAC2 A failed save writes no audit row."
+    },
+    {
+      "ref": "ST-AUDIT-TESTS",
+      "type": "Subtask",
+      "summary": "Regression tests for audit event content and hash-chain verification",
+      "parent": "S-AUDITPERSIST",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "webapi",
+        "gxp"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "Write tests that assert audit row content and that the verification query detects an edited row.\nThe tests are the evidence the change record points to.\n\nAcceptance criteria:\nAC1 Tests run against embedded PostgreSQL in the normal suite.\nAC2 Tampering with one row makes verification fail and name the row."
+    }
+  ],
+  "links": [
+    {
+      "type": "Relates",
+      "from": "B-HIKARILEAK",
+      "to": "S-HIKARI"
+    },
+    {
+      "type": "Blocks",
+      "from": "S-VOCABLOAD",
+      "to": "S-VOCABIMPACT"
+    },
+    {
+      "type": "Blocks",
+      "from": "S-AUDITPERSIST",
+      "to": "S-AUDITEXPORT"
+    },
+    {
+      "type": "Relates",
+      "from": "S-JWTEXP",
+      "to": "S-ESIG"
+    },
+    {
+      "type": "Blocks",
+      "from": "S-ABAPINV",
+      "to": "S-ABAPDOWNLOAD"
+    },
+    {
+      "type": "Blocks",
+      "from": "T-VOCABWINDOW",
+      "to": "S-VOCABIMPACT"
+    },
+    {
+      "type": "Relates",
+      "from": "B-READERRICH",
+      "to": "S-ABAPINV"
+    },
+    {
+      "type": "Blocks",
+      "from": "T-URSAUDIT",
+      "to": "S-ESIG"
+    }
+  ]
+}

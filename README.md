@@ -13,4 +13,5 @@ Subject repos:
 | `playbooks/` | the five Devin playbooks the automations run |
 | `automations/automations.json` | desired-state definitions of the six automations |
 | `jira/seed.json`, `jira/seed.py` | demo tickets for the GSK project, created without trigger labels |
+| `jira/backlog.json` | background backlog (4 Epics, ~30 issues) so the board looks active; `seed.py --file jira/backlog.json` creates the issues only (no status, priority, assignee, comments or links) |
 | `support-sim/` | ten simulated R&D support reports (half duplicates) and a poster for Jira or Slack |
