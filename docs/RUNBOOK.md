@@ -38,7 +38,7 @@ in `validation/README.md` in the WebAPI repo.
 
 ## Day before
 
-1. Board seeded (GSK-1..41 plus role tickets in `jira/roles.json`). Trigger labels are only added
+1. Board seeded (GSK-1..41 plus the role tickets, one per role lane, from the role-ticket seed). Trigger labels are only added
    on stage or in pre-runs.
 2. Pre-run: `devin-backlog` on GSK-2, `devin-abap` on GSK-3, `devin-migrate` on the S/4 wave
    Epic, `devin-test` on the OQ test-design story, `devin-release` on the release Task, one

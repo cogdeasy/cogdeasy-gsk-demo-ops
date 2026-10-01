@@ -18,5 +18,7 @@ print(json.dumps({
 PY
 )
 if [[ "${2:-}" == "--dry-run" ]]; then echo "$body"; exit 0; fi
-curl -sS -X POST "https://api.devin.ai/v3/organizations/${DEVIN_ORG_ID:?}/sessions" \
+# Prints the created session (session_id, url). The pack itself lands later as a PR comment
+# and in the session; poll GET /v3/organizations/$DEVIN_ORG_ID/sessions/<session_id> for status.
+curl -sS --fail-with-body -X POST "https://api.devin.ai/v3/organizations/${DEVIN_ORG_ID:?}/sessions" \
   -H "Authorization: Bearer ${DEVIN_API_KEY:?}" -H "Content-Type: application/json" -d "$body"

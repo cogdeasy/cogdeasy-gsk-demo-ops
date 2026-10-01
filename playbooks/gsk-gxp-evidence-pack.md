@@ -21,13 +21,14 @@ system. Started by the `gsk-gxp-evidence-pack` automation (GitHub PR opened).
 3. Always draft yourself: change record (`change-record.md`), URS delta (`urs-delta.md`), and
    traceability rows (`traceability.csv`).
 4. Fan out one child session per remaining document group required by the risk result, each
-   committing only its own files under `validation/changes/<key>/` on the PR branch (pull before
-   push):
+   committing only its own files under `validation/changes/<key>/` on the PR branch. Siblings
+   push to the same branch, so on a rejected push the child runs `git pull --rebase` and pushes
+   again (its files never overlap a sibling's) until the push succeeds:
    - specification: `fs-ds-delta.md` (+ `validation-plan-delta.md` if high);
    - test evidence: `csa-test-record.md` (low) or `oq-protocol.md` (medium/high), plus
      `iq-checklist.md` if high, using the repo skill `test-engineer`;
    - user acceptance: `pq-uat-script.md` (medium/high) for the R&D scientist;
-   - release: `release-notes.md` and `training-note.md`.
+   - release: `release-notes.md`, plus `training-note.md` if high.
 5. When the children finish, draft `test-summary-report.md`, `validation-summary-report.md` (high
    only) and `inspection-pack.md` (index of every artefact with links), and check that every URS
    line maps to a test with a recorded result.

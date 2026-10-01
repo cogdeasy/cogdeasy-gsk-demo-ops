@@ -20,7 +20,8 @@ for the human QA reviewer. Started by the `gsk-qa-review-prep` automation (GitHu
 5. Draft `validation/changes/<key>/qa-review-checklist.md` from the template with each item
    marked met / not met / n/a and the evidence link. Draft `deviation-capa.md` entries for
    anything not met.
-6. Commit to the PR branch and post one comment: ready / not ready for QA sign-off, with the gap
+6. Commit to the PR branch, wait for `build`, `tests` and `scan` to finish on the new head, then
+   post one comment: ready / not ready for QA sign-off, with that head's CI result and the gap
    list.
 
 ## Specifications

@@ -18,16 +18,17 @@ automation (Jira label `devin-migrate` on an Epic naming the wave).
    target pattern in `abap/remediated/`, and the definition of done from `AGENTS.md` (scan clean
    with `--fail-on minor`, ABAP Unit test class, inventory `remediated_path`, regenerate reports,
    `make check` green). One PR per object.
-3. When the children finish, regenerate the reports on main's view, and post a summary on the
-   Epic: objects done, findings cleared, days moved from outstanding to cleared, open deviations
-   (findings that could not be remediated, left visible).
+3. When the children finish, take each child PR's regenerated `reports/` (its PR branch, not
+   main, since the PRs are still unmerged) and post a summary on the Epic: per object the PR link,
+   findings cleared and days moved from outstanding to cleared, plus open deviations (findings
+   that could not be remediated, left visible). Mark the totals as projected until the PRs merge.
 4. For any object with a data-migration impact, note the related `tools/datamig` rule or
    reconciliation check and leave it for the data migration lead.
 
 ## Specifications
 - One object per child, one PR per object; no scanner changes in remediation PRs.
-- Validation: each child PR passes `make check`; the Epic summary reconciles with
-  `make scan`.
+- Validation: each child PR passes `make check`; each object's line in the Epic summary
+  reconciles with `make scan` on that child's PR branch.
 
 ## Advice and Pointers
 - `ZGSK_MM_BATCH_MOVEMENTS` is the worked example; point children at it.
