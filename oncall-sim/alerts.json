@@ -1,0 +1,113 @@
+{
+  "note": "Synthetic alerts for the WebAPI on-call beat. Monitoring-tool-neutral webhook payloads; post_alert.py sends one alert object per request. The answer key is in expected.json and is never posted. Class names, endpoints, pool settings and the log format (log4j2.xml Console pattern) come from cogdeasy/cogdeasy-gsk-ohdsi-webapi.",
+  "alerts": [
+    {
+      "id": "A1",
+      "title": "p95 latency above threshold on GET /WebAPI/cohortdefinition after deploy",
+      "severity": "high",
+      "status": "firing",
+      "service": "ohdsi-webapi",
+      "env": "prod",
+      "metric": "http.server.requests.p95_ms{method=GET,uri=/WebAPI/cohortdefinition/}",
+      "threshold": "p95 > 2000 ms for 10 min",
+      "observed": "p95 9420 ms (baseline before deploy: 640 ms)",
+      "started_at": "2026-10-01T08:12:00Z",
+      "runbook_url": "https://github.com/cogdeasy/cogdeasy-gsk-demo-ops/blob/main/oncall-sim/README.md#a1-latency-after-deploy",
+      "dashboard_url": "https://dashboards.example.invalid/d/ohdsi-webapi/latency?env=prod",
+      "context": {
+        "deploy": "WebAPI.war build 2.15.0-gsk.4 rolled out at 2026-10-01T08:04:00Z (previous 2.15.0-gsk.3)",
+        "handler": "org.ohdsi.webapi.service.CohortDefinitionService#getCohortDefinitionList",
+        "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi"
+      },
+      "sample_logs": [
+        "2026-10-01 08:04:37.118 INFO main org.springframework.boot.StartupInfoLogger - [] - Started WebApi in 71.284 seconds (JVM running for 74.902)",
+        "[ingress] 10.20.4.17 - - [01/Oct/2026:08:12:03 +0000] \"GET /WebAPI/cohortdefinition/ HTTP/1.1\" 200 1842231 rt=9.387",
+        "[ingress] 10.20.4.22 - - [01/Oct/2026:08:12:09 +0000] \"GET /WebAPI/cohortdefinition/ HTTP/1.1\" 200 1842231 rt=9.512",
+        "[ingress] 10.20.4.17 - - [01/Oct/2026:08:12:11 +0000] \"GET /WebAPI/cohortdefinition/42 HTTP/1.1\" 200 20871 rt=0.118"
+      ]
+    },
+    {
+      "id": "A2",
+      "title": "Hikari pool authDataSource exhausted: logins timing out",
+      "severity": "high",
+      "status": "firing",
+      "service": "ohdsi-webapi",
+      "env": "prod",
+      "metric": "hikaricp.connections.timeout.count{pool=authDataSource}",
+      "threshold": "> 5 timeouts in 5 min",
+      "observed": "37 timeouts in 5 min; active 5 of max 5; pending 14",
+      "started_at": "2026-10-01T09:31:00Z",
+      "runbook_url": "https://github.com/cogdeasy/cogdeasy-gsk-demo-ops/blob/main/oncall-sim/README.md#a2-hikari-pool-exhaustion",
+      "dashboard_url": "https://dashboards.example.invalid/d/ohdsi-webapi/hikari?pool=authDataSource&env=prod",
+      "context": {
+        "pool": "authDataSource (org.ohdsi.webapi.AuthDataSource; maximum-pool-size 5, connection-timeout 5000 ms, register-mbeans true)",
+        "callers": "JdbcAuthRealm behind POST /WebAPI/user/login/db (AtlasRegularSecurity wires it with @Qualifier(\"authDataSource\"))",
+        "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi",
+        "pool_name": "Hikari's default pool name is HikariPool-1, so generic rules match 'HikariPool-1 - Connection is not available, request timed out'. WebAPI sets the name from spring.datasource.hikari.mbean-name (authDataSource in pom.xml), so its logs read 'authDataSource - Connection is not available, request timed out'."
+      },
+      "sample_logs": [
+        "2026-10-01 09:31:12.406 DEBUG http-nio-8080-exec-11 com.zaxxer.hikari.pool.HikariPool - [] - authDataSource - Timeout failure stats (total=5, active=5, idle=0, waiting=14)",
+        "2026-10-01 09:31:12.407 ERROR http-nio-8080-exec-11 org.ohdsi.webapi.shiro.realms.JdbcAuthRealm - [] - There was a SQL error while authenticating user [analyst.k@example.invalid]",
+        "java.sql.SQLTransientConnectionException: authDataSource - Connection is not available, request timed out after 5001ms.",
+        "\tat com.zaxxer.hikari.pool.HikariPool.createTimeoutException(HikariPool.java)",
+        "\tat com.zaxxer.hikari.pool.HikariPool.getConnection(HikariPool.java)",
+        "\tat com.zaxxer.hikari.HikariDataSource.getConnection(HikariDataSource.java)",
+        "\tat org.ohdsi.webapi.shiro.realms.JdbcAuthRealm.doGetAuthenticationInfo(JdbcAuthRealm.java)",
+        "2026-10-01 09:31:40.002 DEBUG authDataSource housekeeper com.zaxxer.hikari.pool.HikariPool - [] - authDataSource - Pool stats (total=5, active=5, idle=0, waiting=14)",
+        "[ingress] 10.20.4.31 - - [01/Oct/2026:09:31:12 +0000] \"POST /WebAPI/user/login/db HTTP/1.1\" 401 0 rt=5.009"
+      ]
+    },
+    {
+      "id": "A3",
+      "title": "5xx spike from GenericExceptionMapper: NullPointerException on save",
+      "severity": "medium",
+      "status": "firing",
+      "service": "ohdsi-webapi",
+      "env": "prod",
+      "metric": "http.server.requests.rate{status=5xx}",
+      "threshold": "5xx > 2% of requests for 5 min",
+      "observed": "7.8% 5xx; 93% on PUT /WebAPI/conceptset/{id} and POST /WebAPI/cohortdefinition/",
+      "started_at": "2026-10-01T10:05:00Z",
+      "runbook_url": "https://github.com/cogdeasy/cogdeasy-gsk-demo-ops/blob/main/oncall-sim/README.md#a3-500-spike-from-genericexceptionmapper",
+      "dashboard_url": "https://dashboards.example.invalid/d/ohdsi-webapi/errors?env=prod",
+      "context": {
+        "logger": "org.ohdsi.webapi.util.GenericExceptionMapper",
+        "repo": "cogdeasy/cogdeasy-gsk-ohdsi-webapi"
+      },
+      "sample_logs": [
+        "2026-10-01 10:05:22.913 ERROR http-nio-8080-exec-6 org.ohdsi.webapi.util.GenericExceptionMapper - [] - org.springframework.dao.DataIntegrityViolationException: could not execute statement",
+        "\tat org.springframework.orm.jpa.vendor.HibernateJpaDialect.convertHibernateAccessException(HibernateJpaDialect.java)",
+        "\tat org.ohdsi.webapi.service.ConceptSetService.updateConceptSet(ConceptSetService.java)",
+        "java.lang.NullPointerException",
+        "\tat org.ohdsi.webapi.util.GenericExceptionMapper.toResponse(GenericExceptionMapper.java:61)",
+        "\tat org.glassfish.jersey.server.ServerRuntime$Responder.mapException(ServerRuntime.java)",
+        "\tat org.glassfish.jersey.server.ServerRuntime$Responder.process(ServerRuntime.java)",
+        "[ingress] 10.20.4.17 - - [01/Oct/2026:10:05:22 +0000] \"PUT /WebAPI/conceptset/118 HTTP/1.1\" 500 0 rt=0.061"
+      ]
+    },
+    {
+      "id": "A4",
+      "title": "Disk usage on /var/log above 85% (flapping)",
+      "severity": "low",
+      "status": "firing",
+      "service": "ohdsi-webapi",
+      "env": "prod",
+      "metric": "disk.used_pct{host=webapi-prod-02,mount=/var/log}",
+      "threshold": "> 85% (no for-duration)",
+      "observed": "85.3%; 7 fire/resolve cycles in the last 60 min, range 84.6-85.4%",
+      "started_at": "2026-10-01T10:40:00Z",
+      "runbook_url": "https://github.com/cogdeasy/cogdeasy-gsk-demo-ops/blob/main/oncall-sim/README.md#a4-flapping-disk-alert",
+      "dashboard_url": "https://dashboards.example.invalid/d/hosts/disk?host=webapi-prod-02",
+      "context": {
+        "host": "webapi-prod-02",
+        "note": "logrotate runs hourly on /var/log/webapi; usage drops ~0.8% after each rotation"
+      },
+      "sample_logs": [
+        "Oct  1 10:00:01 webapi-prod-02 CRON[21877]: (root) CMD (/usr/sbin/logrotate /etc/logrotate.d/webapi)",
+        "Oct  1 10:00:02 webapi-prod-02 logrotate[21878]: rotating log /var/log/webapi/webapi.log, log->rotateCount is 14",
+        "Oct  1 10:40:00 webapi-prod-02 node_exporter-alert: disk.used_pct /var/log 85.3 FIRING",
+        "Oct  1 10:47:00 webapi-prod-02 node_exporter-alert: disk.used_pct /var/log 84.9 RESOLVED"
+      ]
+    }
+  ]
+}
