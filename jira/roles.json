@@ -1,0 +1,303 @@
+{
+  "project": "GSK",
+  "note": "Role-profile issues so every GSK role has visible work in the demo path. Not part of the scripted demo (seed.json) or the background backlog (backlog.json). No trigger labels. Each issue carries one role-* label. 'In Review' is In Progress plus label in-review. 'key' is the Jira key created on cog-gtm; link targets that start with GSK- are existing issues.",
+  "issues": [
+    {
+      "ref": "R-BA-CSNAME",
+      "key": "GSK-42",
+      "type": "Story",
+      "summary": "Refine: scientists want concept-set save errors to say which name clashed",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "role-ba",
+        "webapi",
+        "concept-sets",
+        "needs-refinement"
+      ],
+      "assignee": null,
+      "description": "Raw request from the R&D epidemiology group: when a concept set save fails because the name is taken, the error should say which name clashed.\nToday the message is generic, so scientists guess, rename and retry, and some file support tickets instead.\n\nRequest as received (not yet refined):\n\"When I save a concept set and it already exists, tell me the name it clashed with, and ideally the ID of the other set so I can open it.\"\n\nOpen questions:\n- Does this apply to cohort definitions too, or concept sets only?\n- Is the clash case-sensitive?\n- Should the message show the other set's ID and owner, given some sets are private to a team?\n\nAcceptance criteria (draft, incomplete):\nAC1 Saving a concept set whose name already exists returns 409 with a message that names the clashing concept set.\nAC2 The message contains no raw database text.\nAC3 TBD after refinement: cohort definitions, case handling, what the message may disclose about the other set."
+    },
+    {
+      "ref": "R-DEV-CSNAME",
+      "key": "GSK-43",
+      "type": "Story",
+      "summary": "ConceptSetService: return the clashing name in the 409 on duplicate concept-set save",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "role-dev",
+        "webapi",
+        "concept-sets"
+      ],
+      "points": 3,
+      "assignee": null,
+      "description": "Implement the refined duplicate-name message for concept-set create and update in ConceptSetService.\nThis is the developer half of the scientists' request; it builds on the safe 409 from GSK-1 and must not reintroduce raw database text.\n\nStarts after the refinement story is complete and its acceptance criteria are agreed.\n\nAcceptance criteria:\nAC1 POST /conceptset/ and PUT /conceptset/{id} with a name already in use return 409 and a message naming the clashing concept set.\nAC2 The check uses the existing conceptSetExists query, not the database constraint text.\nAC3 Unit tests cover create, update to an existing name and update keeping its own name.\nAC4 build, tests and scan checks green; PR fills Ticket, URS delta, Test mapping and Change record sections."
+    },
+    {
+      "ref": "R-TEST-OQ",
+      "key": "GSK-44",
+      "type": "Story",
+      "summary": "Test design: OQ cases for GenericExceptionMapper error responses",
+      "status": "To Do",
+      "priority": "High",
+      "labels": [
+        "role-test",
+        "webapi",
+        "gxp",
+        "tests"
+      ],
+      "points": 3,
+      "assignee": null,
+      "description": "Write the operational qualification (OQ) test cases that prove GenericExceptionMapper returns the right status and a safe body for each exception type.\nThe GSK-1 fix changes what users see on errors, so the evidence pack needs test cases that trace to each acceptance criterion.\n\nScope: DataIntegrityViolationException (no cause, one cause, nested cause with and without 'Detail:'), and the existing 403, 404, 400, 501 and 500 mappings.\n\nAcceptance criteria:\nAC1 One OQ case per GSK-1 acceptance criterion AC1-AC5, each with input, expected status, expected body rule and pass/fail rule.\nAC2 Each case names the automated test method that executes it.\nAC3 Cases are added as rows to validation/traceability.csv on the GSK-1 PR branch, with reviewer and result columns left blank.\nAC4 Cases run under ./reproduce.sh or mvn test without manual steps."
+    },
+    {
+      "ref": "R-CSV-RISK",
+      "key": "GSK-45",
+      "type": "Task",
+      "summary": "Risk assessment for GSK-1 change (CSA medium)",
+      "status": "In Progress",
+      "priority": "High",
+      "labels": [
+        "role-csv",
+        "webapi",
+        "gxp",
+        "csa"
+      ],
+      "points": 2,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Record the risk-based (CSA) assessment for the GSK-1 error-mapper change and confirm it is medium risk, not high.\nThe rating decides the assurance level: medium means unscripted plus targeted scripted testing; high would mean full GAMP 5 IQ/OQ/PQ.\n\nAcceptance criteria:\nAC1 Intended use, failure modes and impact on patient safety, product quality and data integrity are written down for the change.\nAC2 Rating is justified against the silver-tier criteria in validation/README.md.\nAC3 Assurance activities are listed (automated regression tests, OQ cases, scientist UAT) with the evidence each produces.\nAC4 Draft is attached to the change record; the approver, decision and date fields are left blank for the named GSK approver.",
+      "comment": "Draft is in progress. Leaning medium: the change only alters error responses, no stored data changes. Waiting on the OQ case list before writing the assurance section."
+    },
+    {
+      "ref": "R-CSV-VSR",
+      "key": "GSK-46",
+      "type": "Task",
+      "summary": "Validation summary report for the 2.15.x maintenance release",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "role-csv",
+        "webapi",
+        "gxp",
+        "release"
+      ],
+      "points": 3,
+      "assignee": null,
+      "description": "Draft the validation summary report (VSR) that rolls up every change in the WebAPI 2.15.x maintenance release.\nThe change board and QA need one document showing each change, its risk rating, the testing done and any open deviations before release.\n\nAcceptance criteria:\nAC1 One row per change in the release: ticket, risk rating, assurance level, test evidence location, deviations.\nAC2 Open deviations and deferred items are listed with the ticket that tracks them.\nAC3 Traceability totals match validation/traceability.csv for the release.\nAC4 Conclusion, reviewer, approver and date fields are left blank for named GSK people."
+    },
+    {
+      "ref": "R-QA-EVPACK",
+      "key": "GSK-47",
+      "type": "Task",
+      "summary": "QA review of evidence pack for GSK-1",
+      "status": "To Do",
+      "priority": "High",
+      "labels": [
+        "role-qa",
+        "webapi",
+        "gxp",
+        "evidence-pack"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "QA reviews the draft evidence pack produced for the GSK-1 change before the named approver signs.\nThe pack is drafted by an agent, so QA checks it is complete, consistent and traceable, not just present.\n\nAcceptance criteria:\nAC1 URS delta, traceability rows, change record and test results are present for the GSK-1 PR.\nAC2 Every acceptance criterion on GSK-1 traces to at least one test and one result.\nAC3 Findings are listed as accept / correct / reject with a reason; no reviewer or signature fields are filled by anyone other than the named reviewer.\nAC4 Any correction requested is raised on the PR, not edited in the pack by QA."
+    },
+    {
+      "ref": "R-APPSEC-SWARM",
+      "key": "GSK-48",
+      "type": "Story",
+      "summary": "Security Swarm scan profile for WebAPI (authn/authz, injection)",
+      "status": "In Review",
+      "priority": "High",
+      "labels": [
+        "role-appsec",
+        "webapi",
+        "security",
+        "in-review"
+      ],
+      "points": 5,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "Define the Security Swarm scan profile used on every WebAPI PR, focused on authentication, authorisation and injection.\nGeneric scanners miss Shiro filter-chain gaps and string-built SQL in WebAPI, which are the issues AppSec actually cares about here.\n\nScope: Shiro filter chain and permission checks on Jersey resources, JWT handling, SqlRender and JdbcTemplate query building, path and query parameter handling.\n\nAcceptance criteria:\nAC1 Profile lists the rule sets, the paths in scope and the paths excluded, with a reason for each exclusion.\nAC2 Findings are rated with the existing severity rubric and map to Jira priority.\nAC3 A trial run on main is attached with false positives marked and explained.\nAC4 Profile runs alongside the existing scan check and does not replace it.",
+      "comment": "Profile draft is up for review with AppSec. Trial run on main: 14 findings, 9 marked false positive (parameterised SqlRender calls). Remaining 5 are permission checks on legacy endpoints."
+    },
+    {
+      "ref": "R-APPSEC-CVEACCEPT",
+      "key": "GSK-49",
+      "type": "Task",
+      "summary": "Risk-acceptance record for CVEs deferred to the Spring Boot 2 upgrade",
+      "status": "To Do",
+      "priority": "Highest",
+      "labels": [
+        "role-appsec",
+        "webapi",
+        "security",
+        "cve"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "Write the risk-acceptance record for dependency CVEs that cannot be fixed without moving to Spring Boot 2.\nThe Trivy import leaves CVEs with no Boot 1.5-compatible fix; they need an owner, a reason and a review date instead of sitting open.\n\nAcceptance criteria:\nAC1 Each deferred CVE is listed with package, version, severity, why no patch release is possible and the exposure in WebAPI.\nAC2 Compensating controls are stated per CVE (network exposure, disabled feature, WAF rule) or marked none.\nAC3 Each CVE points to the Spring Boot 2 work that removes it.\nAC4 Risk owner, decision, review date and signature fields are left blank for the named GSK risk owner."
+    },
+    {
+      "ref": "R-REL-PACK",
+      "key": "GSK-50",
+      "type": "Task",
+      "summary": "Release pack and change-board notes for the 2.15.x maintenance release",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "role-release",
+        "webapi",
+        "release"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "Assemble the release pack and the change-board notes for the WebAPI 2.15.x maintenance release.\nThe change board decides go/no-go from this pack, so it must list what changes, how to roll back and what evidence exists.\n\nAcceptance criteria:\nAC1 Release notes list every ticket in the release with a one-line user-facing description.\nAC2 Deployment and rollback steps are written for the release, including Flyway migrations and their down path.\nAC3 Links to the validation summary report and open risk-acceptance records.\nAC4 Change-board notes are drafted for entry into GSK's change system; decision and approver fields left blank."
+    },
+    {
+      "ref": "R-SRE-P95",
+      "key": "GSK-51",
+      "type": "Bug",
+      "summary": "On-call: p95 latency alert on /WebAPI/cohortdefinition after deploy",
+      "status": "In Progress",
+      "priority": "Highest",
+      "labels": [
+        "role-sre",
+        "webapi",
+        "performance",
+        "on-call"
+      ],
+      "points": 3,
+      "assignee": "ciaran.deasy@cognition.ai",
+      "description": "After the last WebAPI deploy, p95 latency on GET /WebAPI/cohortdefinition went from about 400 ms to over 3 s and paged on-call.\nThe cohort list is the ATLAS landing page for most scientists, so a slow list looks like ATLAS is down.\n\nAlert text:\n[FIRING] WebAPI p95 latency high: route=/WebAPI/cohortdefinition method=GET p95=3.4s threshold=1.5s for=10m env=prod\n\nSteps to reproduce:\n1. On a staging copy with production data volume (about 6,000 cohort definitions), deploy the current build.\n2. Call GET /WebAPI/cohortdefinition 50 times with a normal user token.\n3. Compare p95 with the previous build on the same data: previous about 0.4 s, current about 3 s.\n4. Check the Grafana WebAPI dashboard: Hikari active connections stay normal, request time rises on this route only.\n\nAcceptance criteria:\nAC1 Cause identified and written on this ticket with evidence (query plan, profiler output or diff).\nAC2 p95 on GET /WebAPI/cohortdefinition back under 1.5 s on the staging copy.\nAC3 A regression check for the list endpoint latency is added to the release checklist.\nAC4 Post-incident note drafted; no blame, owner fields left for the on-call lead.",
+      "comment": "Reproduced on staging. Time is spent after the query returns: each row now loads tags and permissions one by one. Checking which commit added the per-row lookups."
+    },
+    {
+      "ref": "R-SRE-HIKARIRUN",
+      "key": "GSK-52",
+      "type": "Task",
+      "summary": "Runbook update for the Hikari pool exhaustion alert",
+      "status": "To Do",
+      "priority": "Low",
+      "labels": [
+        "role-sre",
+        "webapi",
+        "performance",
+        "runbook"
+      ],
+      "points": 1,
+      "assignee": null,
+      "description": "Update the on-call runbook for the 'Hikari pending connections > 0 for 5 minutes' alert.\nThe current runbook says 'restart WebAPI', which hides the cause and drops running generations.\n\nAcceptance criteria:\nAC1 Runbook shows how to read active, idle and pending connections from the Grafana WebAPI dashboard and JMX.\nAC2 Lists known causes (cancelled executions holding connections, long cohort generations, slow source database) and how to tell them apart.\nAC3 Restart is the last step, with what to capture before restarting (thread dump, pool metrics).\nAC4 Runbook is linked from the alert annotation."
+    },
+    {
+      "ref": "R-SCI-UAT",
+      "key": "GSK-53",
+      "type": "Task",
+      "summary": "UAT (PQ) of concept-set duplicate-name message",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "role-scientist",
+        "webapi",
+        "gxp",
+        "uat"
+      ],
+      "points": 1,
+      "assignee": null,
+      "description": "A scientist runs user acceptance testing (PQ) of the new duplicate-name message in ATLAS on the validation environment.\nThis confirms the change works for the people who asked for it, in their normal workflow, not just in automated tests.\n\nAcceptance criteria:\nAC1 Scripted steps: create a concept set, create a second with the same name, read the message, rename and save.\nAC2 The message names the clashing concept set and is understandable without help.\nAC3 Scientist records pass/fail and any comment per step; tester name, signature and date left for the scientist.\nAC4 Any failure is raised as a new bug linked to this ticket."
+    },
+    {
+      "ref": "R-SAP-S4READY",
+      "key": "GSK-54",
+      "type": "Story",
+      "summary": "S/4 custom-code readiness inventory for abap2xlsx",
+      "status": "To Do",
+      "priority": "Medium",
+      "labels": [
+        "role-sap",
+        "abap",
+        "s4hana",
+        "clean-core"
+      ],
+      "points": 5,
+      "assignee": null,
+      "description": "Produce a readiness inventory for the abap2xlsx classes and the GSK Z-programs that call them, against S/4HANA custom-code checks.\nThe S/4 move needs a list of what will break, what needs a released-API replacement and what can be retired, before effort is estimated.\n\nAcceptance criteria:\nAC1 Every abap2xlsx class and calling Z-object is listed with its S/4 readiness finding (simplification item, non-released API, obsolete statement) or 'clean'.\nAC2 Each finding is rated by effort (S/M/L) and clean-core level.\nAC3 Objects not run in 12 months are flagged as retirement candidates.\nAC4 Inventory is committed under docs/ in cogdeasy/cogdeasy-gsk-abap2xlsx and passes abaplint CI; analysis only, no code changes."
+    },
+    {
+      "ref": "R-ARCH-BOOT2ADR",
+      "key": "GSK-55",
+      "type": "Story",
+      "summary": "ADR: Spring Boot 1.5 to 2.7 upgrade path for WebAPI",
+      "status": "To Do",
+      "priority": "High",
+      "labels": [
+        "role-architect",
+        "webapi",
+        "tech-debt",
+        "adr"
+      ],
+      "points": 5,
+      "assignee": null,
+      "description": "Write an architecture decision record (ADR) for how WebAPI moves from Spring Boot 1.5 to 2.7: one step or staged, and in what order.\nThe upgrade touches Jersey, Shiro, Flyway, Hikari and Java 11 at once; without an agreed path, teams make conflicting changes.\n\nAcceptance criteria:\nAC1 Options compared: single jump to 2.7, staged via 2.0/2.3, or stay on 1.5 with backported fixes; each with risk, effort and validation impact.\nAC2 Recommended order for Flyway, Shiro, Jersey and Java 11 changes, with dependencies stated.\nAC3 Validation impact stated per option (CSA rating, expected IQ/OQ/PQ scope).\nAC4 ADR status left as Proposed; decision and approver fields left for the named architect."
+    },
+    {
+      "ref": "R-AUD-INSPECT",
+      "key": "GSK-56",
+      "type": "Task",
+      "summary": "Inspection-readiness pack for one change, end to end",
+      "status": "To Do",
+      "priority": "Low",
+      "labels": [
+        "role-auditor",
+        "webapi",
+        "gxp",
+        "inspection"
+      ],
+      "points": 2,
+      "assignee": null,
+      "description": "Assemble one change (GSK-1) end to end as an inspector would ask for it: request, risk, code, tests, approvals and release.\nInspectors pick a single change and follow it; this shows whether the trail holds together without someone explaining it in the room.\n\nAcceptance criteria:\nAC1 One index page links, in order: ticket, risk assessment, URS delta, PR and commits, test results, QA review, change record, release pack.\nAC2 Each link is checked to open and to refer to the same change ID.\nAC3 Gaps are listed as findings, not filled in.\nAC4 Who-did-what-when is shown from system records (Jira history, Git log, CI runs), not retyped."
+    }
+  ],
+  "links": [
+    {
+      "type": "Blocks",
+      "from": "R-BA-CSNAME",
+      "to": "R-DEV-CSNAME"
+    },
+    {
+      "type": "Relates",
+      "from": "R-SCI-UAT",
+      "to": "R-DEV-CSNAME"
+    },
+    {
+      "type": "Relates",
+      "from": "R-TEST-OQ",
+      "to": "GSK-1"
+    },
+    {
+      "type": "Relates",
+      "from": "R-APPSEC-CVEACCEPT",
+      "to": "GSK-2"
+    },
+    {
+      "type": "Relates",
+      "from": "R-SAP-S4READY",
+      "to": "GSK-3"
+    },
+    {
+      "type": "Relates",
+      "from": "R-QA-EVPACK",
+      "to": "R-CSV-RISK"
+    },
+    {
+      "type": "Blocks",
+      "from": "R-CSV-VSR",
+      "to": "R-REL-PACK"
+    },
+    {
+      "type": "Relates",
+      "from": "R-AUD-INSPECT",
+      "to": "R-QA-EVPACK"
+    }
+  ]
+}
