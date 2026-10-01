@@ -38,7 +38,9 @@ in `validation/README.md` in the WebAPI repo.
 
 ## Day before
 
-1. Board seeded (GSK-1..41 plus role tickets GSK-42..56 from `jira/roles.json`). Trigger labels are only added
+1. Board populated: GSK-1..56 already exist on board 2637. `jira/roles.json` records GSK-42..56
+   (status, links, assignee); `seed.py` recreates only their summary, type, labels and
+   description, so on a fresh board set status and links by hand from that file. Trigger labels are only added
    on stage or in pre-runs.
 2. Pre-run: `devin-backlog` on GSK-2, `devin-abap` on GSK-3, `devin-migrate` on the S/4 wave
    Epic, `devin-test` on the OQ test-design story, `devin-release` on the release Task, one
