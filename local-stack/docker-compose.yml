@@ -1,0 +1,92 @@
+# GSK cohort-analytics demo stack: PostgreSQL with the Eunomia GiBleed demo CDM, WebAPI built from
+# cogdeasy/cogdeasy-gsk-ohdsi-webapi, ATLAS 2.15 and an nginx proxy that serves both on one origin.
+# Bring it up with scripts/up.sh (builds the WAR first). ATLAS: http://localhost:${PROXY_PORT:-8090}/atlas/
+
+name: gsk-local-stack
+
+volumes:
+  atlasdb-data:
+
+services:
+  atlasdb:
+    # Broadsea's demo database: Eunomia GiBleed CDM (demo_cdm), results schema (demo_cdm_results)
+    # and a pre-baselined WebAPI schema (webapi).
+    image: ohdsi/broadsea-atlasdb:2.3.0
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: mypass
+    ports:
+      - "${ATLASDB_PORT:-5433}:5432"
+    networks:
+      default:
+        # webapi.source.source_connection in the image points at this hostname.
+        aliases: [broadsea-atlasdb]
+    volumes:
+      - atlasdb-data:/var/lib/postgresql/data
+      - ./atlasdb/100_populate_source_source_daimon.sql:/docker-entrypoint-initdb.d/100_populate_source_source_daimon.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  webapi:
+    build: ./webapi
+    image: gsk-webapi:local
+    restart: unless-stopped
+    depends_on:
+      atlasdb:
+        condition: service_healthy
+    environment:
+      JAVA_OPTS: "-Xmx2g"
+      DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      DATASOURCE_URL: jdbc:postgresql://atlasdb:5432/postgres
+      DATASOURCE_USERNAME: postgres
+      DATASOURCE_PASSWORD: mypass
+      DATASOURCE_OHDSI_SCHEMA: webapi
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA: webapi
+      SPRING_BATCH_REPOSITORY_TABLEPREFIX: webapi.BATCH_
+      FLYWAY_DATASOURCE_DRIVERCLASSNAME: org.postgresql.Driver
+      FLYWAY_DATASOURCE_URL: jdbc:postgresql://atlasdb:5432/postgres
+      FLYWAY_DATASOURCE_USERNAME: postgres
+      FLYWAY_DATASOURCE_PASSWORD: mypass
+      FLYWAY_LOCATIONS: classpath:db/migration/postgresql
+      FLYWAY_PLACEHOLDERS_OHDSISCHEMA: webapi
+      FLYWAY_SCHEMAS: webapi
+      FLYWAY_BASELINE_ON_MIGRATE: "true"
+      FLYWAY_TABLE: schema_history
+      flyway_baselineVersionAsString: "2.2.5.20180212152023"
+      FLYWAY_BASELINEDESCRIPTION: Base Migration
+      SECURITY_PROVIDER: DisabledSecurity
+      SECURITY_CORS_ENABLED: "true"
+      SECURITY_ORIGIN: "*"
+      I18N_ENABLED: "true"
+      LOGGING_LEVEL_ROOT: info
+      LOGGING_LEVEL_ORG_OHDSI: info
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 60
+      start_period: 60s
+
+  atlas:
+    image: ohdsi/atlas:2.15.0
+    restart: unless-stopped
+    environment:
+      WEBAPI_URL: ""
+    volumes:
+      - ./atlas/config-local.js:/etc/atlas/config-local.js:ro
+
+  proxy:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      - atlas
+      - webapi
+    ports:
+      - "${PROXY_PORT:-8090}:80"
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
