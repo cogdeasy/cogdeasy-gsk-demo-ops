@@ -1,0 +1,35 @@
+<!-- Maven Central (repo.maven.apache.org) can return HTTP 429 to cloud egress IPs, and the fork's pom
+     lists repo.ohdsi.org first, which proxies Central slowly. Route Central through Google's public
+     mirror and try it before the pom's repositories; OHDSI-only artifacts still come from repo.ohdsi.org. -->
+<settings>
+  <mirrors>
+    <mirror>
+      <id>google-maven-central</id>
+      <name>Google mirror of Maven Central</name>
+      <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+      <mirrorOf>central</mirrorOf>
+    </mirror>
+  </mirrors>
+  <profiles>
+    <profile>
+      <id>google-central-first</id>
+      <repositories>
+        <repository>
+          <id>google-central</id>
+          <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>google-central-plugins</id>
+          <url>https://maven-central.storage-download.googleapis.com/maven2/</url>
+          <snapshots><enabled>false</enabled></snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>google-central-first</activeProfile>
+  </activeProfiles>
+</settings>
