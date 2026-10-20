@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "automations.schema.json",
+  "title": "Devin automation desired-state definitions",
+  "type": "object",
+  "required": ["automations"],
+  "additionalProperties": false,
+  "properties": {
+    "note": {"type": "string"},
+    "automations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["name", "demo", "trigger", "repo", "output"],
+        "oneOf": [{"required": ["playbook"]}, {"required": ["action"]}],
+        "additionalProperties": false,
+        "properties": {
+          "name": {"type": "string", "pattern": "^gsk-[a-z0-9-]+( \\([A-Za-z]+\\))?$"},
+          "demo": {"type": "string", "minLength": 1},
+          "trigger": {"$ref": "#/$defs/trigger"},
+          "repo": {"$ref": "#/$defs/repo"},
+          "playbook": {"type": "string", "pattern": "^playbooks/[a-z0-9-]+\\.md$"},
+          "action": {"type": "string", "minLength": 1},
+          "output": {"type": "string", "minLength": 1},
+          "notes": {"type": "string"}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "repo": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+    "trigger": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {"type": {"enum": ["jira", "github", "slack", "schedule", "webhook", "api"]}},
+      "allOf": [
+        {
+          "if": {"properties": {"type": {"const": "jira"}}},
+          "then": {
+            "required": ["event", "project", "label"],
+            "additionalProperties": false,
+            "properties": {
+              "type": true,
+              "event": {"enum": ["issue_label_added", "issue_created"]},
+              "project": {"type": "string", "pattern": "^[A-Z][A-Z0-9]+$"},
+              "issue_type": {"enum": ["Epic", "Story", "Task", "Bug", "Subtask"]},
+              "label": {"type": "string", "pattern": "^[a-z0-9-]+$"}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "github"}}},
+          "then": {
+            "required": ["event", "repo"],
+            "additionalProperties": false,
+            "properties": {
+              "type": true,
+              "event": {"type": "string", "pattern": "^pull_request\\.[a-z_]+$"},
+              "repo": {"$ref": "#/$defs/repo"},
+              "label": {"type": "string", "minLength": 1}
+            }
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "slack"}}},
+          "then": {
+            "required": ["event", "channel_id"],
+            "additionalProperties": false,
+            "properties": {"type": true, "event": {"type": "string"}, "channel_id": {"type": "string"}}
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "schedule"}}},
+          "then": {
+            "required": ["rrule"],
+            "additionalProperties": false,
+            "properties": {"type": true, "rrule": {"type": "string", "minLength": 1}}
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "webhook"}}},
+          "then": {
+            "required": ["event"],
+            "additionalProperties": false,
+            "properties": {"type": true, "event": {"type": "string"}, "source": {"type": "string"}}
+          }
+        },
+        {
+          "if": {"properties": {"type": {"const": "api"}}},
+          "then": {
+            "required": ["script"],
+            "additionalProperties": false,
+            "properties": {"type": true, "script": {"type": "string", "minLength": 1}}
+          }
+        }
+      ]
+    }
+  }
+}

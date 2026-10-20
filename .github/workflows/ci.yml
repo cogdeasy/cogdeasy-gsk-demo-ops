@@ -1,0 +1,41 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - name: install (locked)
+        run: uv sync --locked
+      - name: lint
+        run: uv run ruff check --output-format=github .
+      - name: format
+        run: uv run ruff format --check .
+      - name: typecheck
+        run: uv run mypy
+      - name: shellcheck
+        run: shellcheck api/*.sh
+      - name: validate data files
+        run: uv run demo-ops-validate
+      - name: tests
+        run: uv run pytest
+      - name: dry-run smoke (python3 -S, no site-packages)
+        run: |
+          python3 -S jira/seed.py --dry-run
+          python3 -S jira/seed.py --file jira/backlog.json --dry-run
+          python3 -S support-sim/post_reports.py --target jira --dry-run
+          python3 -S support-sim/post_reports.py --target slack --dry-run
+          python3 -S oncall-sim/post_alert.py --dry-run
+          GSK_AUDIT_PLAYBOOK_ID=00000000 api/start_audit_pack.sh GSK-1 --dry-run

@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oncall-alerts.schema.json",
+  "title": "Synthetic on-call alerts (one webhook payload per alert)",
+  "type": "object",
+  "required": ["alerts"],
+  "additionalProperties": false,
+  "properties": {
+    "note": {"type": "string"},
+    "alerts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "title", "severity", "status", "service", "env", "metric", "threshold",
+          "observed", "started_at", "runbook_url", "dashboard_url", "context", "sample_logs"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^A[0-9]+$"},
+          "title": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["low", "medium", "high", "critical"]},
+          "status": {"enum": ["firing", "resolved"]},
+          "service": {"type": "string", "minLength": 1},
+          "env": {"enum": ["dev", "test", "staging", "prod"]},
+          "metric": {"type": "string", "minLength": 1},
+          "threshold": {"type": "string", "minLength": 1},
+          "observed": {"type": "string", "minLength": 1},
+          "started_at": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z$"},
+          "runbook_url": {"type": "string", "pattern": "^https://"},
+          "dashboard_url": {"type": "string", "pattern": "^https://"},
+          "context": {"type": "object", "additionalProperties": {"type": "string"}},
+          "sample_logs": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

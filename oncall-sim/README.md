@@ -6,7 +6,7 @@ Four synthetic alerts for `ohdsi-webapi` so the demo can show Devin taking an on
 |---|---|
 | `alerts.json` | 4 alerts in a monitoring-tool-neutral webhook shape |
 | `expected.json` | answer key, never posted |
-| `post_alert.py` | posts one alert or all of them to a Devin webhook (stdlib only) |
+| `post_alert.py` | posts one alert or all of them to a Devin webhook (shim for `demo-ops-oncall-sim`; `--dry-run` needs only `python3`) |
 
 Alert fields: `id`, `title`, `severity`, `status`, `service`, `env`, `metric`, `threshold`, `observed`, `started_at`, `runbook_url`, `dashboard_url` (placeholder host), `context`, `sample_logs`. Log lines use the WebAPI Console pattern from `src/main/resources/log4j2.xml` (`%d %p %t %C - %x - %m`); lines starting `[ingress]` are reverse-proxy access logs, which WebAPI itself does not write.
 
