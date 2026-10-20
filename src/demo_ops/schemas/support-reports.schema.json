@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "support-reports.schema.json",
+  "title": "Simulated R&D support reports",
+  "type": "object",
+  "required": ["reports"],
+  "additionalProperties": false,
+  "properties": {
+    "note": {"type": "string"},
+    "reports": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "reporter", "text", "dup_of"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string", "pattern": "^R[0-9]+$"},
+          "reporter": {"type": "string", "minLength": 1},
+          "text": {"type": "string", "minLength": 1},
+          "dup_of": {"type": ["string", "null"], "minLength": 1}
+        }
+      }
+    }
+  }
+}

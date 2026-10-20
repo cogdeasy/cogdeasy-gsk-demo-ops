@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "jira-issues.schema.json",
+  "title": "Jira issue seed file (seed.json, backlog.json, roles.json)",
+  "type": "object",
+  "required": ["project", "issues"],
+  "additionalProperties": false,
+  "properties": {
+    "project": {"type": "string", "pattern": "^[A-Z][A-Z0-9]+$"},
+    "note": {"type": "string"},
+    "issues": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/issue"}},
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "from", "to"],
+        "additionalProperties": false,
+        "properties": {
+          "type": {"enum": ["Blocks", "Relates", "Duplicate", "Cloners"]},
+          "from": {"type": "string", "minLength": 1},
+          "to": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "issue": {
+      "type": "object",
+      "required": ["ref", "type", "summary", "labels", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "ref": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]*$"},
+        "key": {"type": "string", "pattern": "^[A-Z][A-Z0-9]+-[0-9]+$"},
+        "type": {"enum": ["Epic", "Story", "Task", "Bug", "Subtask"]},
+        "summary": {"type": "string", "minLength": 1, "maxLength": 255},
+        "labels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^[^\\s]+$"}
+        },
+        "trigger_label": {"type": "string", "pattern": "^[a-z0-9-]+$"},
+        "description": {"type": "string", "minLength": 1},
+        "parent": {"type": "string", "minLength": 1},
+        "status": {"enum": ["To Do", "In Progress", "In Review", "Done"]},
+        "priority": {"enum": ["Highest", "High", "Medium", "Low", "Lowest"]},
+        "assignee": {"type": ["string", "null"], "format": "email"},
+        "points": {"type": "integer", "minimum": 0, "maximum": 21},
+        "comment": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

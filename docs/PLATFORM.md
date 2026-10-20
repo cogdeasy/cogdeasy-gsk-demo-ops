@@ -13,7 +13,7 @@ What each piece is, where it shows up, and what is set up today. Sources are Dev
 | Devin for migrations | Playbook-driven, parallel migration work: framework upgrades, language and code modernisation ([docs](https://docs.devin.ai/use-cases/migration-modernization)) | S/4HANA wave remediation on cogdeasy/gsk; Spring Boot 1.5 -> 2.7 ADR on WebAPI | playbook ready |
 | Devin API | REST API to start and manage sessions with a playbook, tags and structured output ([docs](https://docs.devin.ai/api-reference/overview)) | `api/start_audit_pack.sh` starts the audit pack from GSK tooling | script ready; needs a service-user key |
 | Devin Oncall | Responders for Slack channels or PagerDuty incidents, incident investigation | SRE beat | not set up in this org (Oncall setup incomplete); the demo uses a webhook automation instead |
-| Integrations / MCP | Jira (native + Atlassian MCP), GitHub, Slack, PagerDuty, Datadog etc. | Jira and GitHub in use | Atlassian MCP on v1 endpoint: move to v2 |
+| Integrations / MCP | Jira (native + Atlassian MCP), GitHub, Slack, PagerDuty, Datadog etc. | Jira and GitHub in use | Atlassian MCP on v1 endpoint: move to v2 (tracked in `docs/MODERNISATION.md`, M1) |
 | Knowledge | Org notes injected when relevant | not required | — |
 
 ## Skills, plugins, rules: how they fit
@@ -36,3 +36,11 @@ What each piece is, where it shows up, and what is set up today. Sources are Dev
 
 Rule of thumb: repo-specific how -> repo skill; cross-repo policy -> plugin rule; ordered lane
 procedure -> playbook; when it starts -> automation.
+
+## Running this repo's scripts
+
+The scripts that call Jira, Slack and the Devin API share one client layer in `src/demo_ops/`:
+`http.py` for timeouts and retries, `settings.py` for env vars that fail fast, and
+`jira_client.py` / `devin_client.py`. Setup, commands and checks are in the README under
+**Setup**. Secrets come only from the environment (`.env.example`). The data files are checked
+against JSON Schemas by `demo-ops-validate`, in CI and in pre-commit.

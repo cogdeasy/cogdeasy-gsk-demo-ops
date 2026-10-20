@@ -1,0 +1,58 @@
+[project]
+name = "gsk-demo-ops"
+version = "0.2.0"
+description = "Track B demo control plane: Jira seeding, support and on-call simulators, Devin API starters, data validation"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.27,<1",
+    "jsonschema>=4.21,<5",
+    "tenacity>=8.2,<10",
+]
+
+[project.scripts]
+demo-ops-seed = "demo_ops.seed:main"
+demo-ops-support-sim = "demo_ops.support_sim:main"
+demo-ops-oncall-sim = "demo_ops.oncall_sim:main"
+demo-ops-audit-pack = "demo_ops.audit_pack:main"
+demo-ops-validate = "demo_ops.validate:main"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.10",
+    "pre-commit>=3.7",
+    "pytest>=8.2",
+    "ruff>=0.6",
+    "types-jsonschema>=4.21",
+]
+
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/demo_ops"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "UP", "S", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["demo_ops", "conftest"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+mypy_path = ["src", "tests"]
+files = ["src", "tests"]
+explicit_package_bases = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
