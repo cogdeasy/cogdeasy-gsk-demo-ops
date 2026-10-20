@@ -7,6 +7,7 @@ python3 without the package dependencies installed.
 from __future__ import annotations
 
 import json
+import re
 import time
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
@@ -17,6 +18,7 @@ if TYPE_CHECKING:
 
 DEFAULT_TIMEOUT = 15.0
 DEFAULT_ATTEMPTS = 4
+MIN_SECRET_LEN = 8
 # Only 429 (rate limited: the request was refused, not processed), so a retried POST cannot
 # create a second Jira issue or Devin session. A 503 or read timeout may follow a completed
 # write, so neither is retried.
@@ -131,6 +133,8 @@ def _redact(text: str, url: str, headers: Mapping[str, str]) -> str:
     for value in headers.values():
         secrets.update({value, *value.split()})
     secrets |= {quote(s, safe="") for s in secrets} | {unquote(s) for s in secrets}
-    for secret in sorted((s for s in secrets if len(s) >= 4), key=len, reverse=True):
-        text = text.replace(secret, "<redacted>")
+    # Short segments ("rest", "api", "issue", "Basic") are route words, not secrets.
+    for secret in sorted((s for s in secrets if len(s) >= MIN_SECRET_LEN), key=len, reverse=True):
+        # Case-insensitive so lowercase percent-escapes (%2f) match quote()'s %2F.
+        text = re.sub(re.escape(secret), "<redacted>", text, flags=re.IGNORECASE)
     return text

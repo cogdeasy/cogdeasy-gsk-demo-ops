@@ -123,3 +123,13 @@ def test_error_detail_redacts_query_tokens_and_encoded_paths() -> None:
     assert "rejected" in message
     assert "qtok1234" not in message
     assert "SECRETPATH" not in message
+
+
+def test_redaction_keeps_route_words_and_matches_lowercase_escapes() -> None:
+    body = {"errorMessages": ["issue type is required; hook hooks.test%2ft0%2fsecretpath1"]}
+    http = client(lambda r: httpx.Response(400, json=body), [])
+    with pytest.raises(HttpError) as err:
+        http.post_json("https://hooks.test/rest/api/3/issue/SECRETPATH1", {})
+    message = str(err.value)
+    assert "issue type is required" in message
+    assert "secretpath1" not in message.lower()
