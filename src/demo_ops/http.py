@@ -10,7 +10,7 @@ import json
 import time
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
-from urllib.parse import urlsplit
+from urllib.parse import parse_qsl, quote, unquote, urlsplit
 
 if TYPE_CHECKING:
     import httpx
@@ -123,11 +123,14 @@ def _error_detail(response: httpx.Response) -> str:
 
 
 def _redact(text: str, url: str, headers: Mapping[str, str]) -> str:
-    """Strip the URL path, query and header values (tokens, webhook secrets) from text."""
+    """Strip the URL path, query values and header values (tokens, webhook secrets) from text."""
     parts = urlsplit(url)
     secrets = {url, parts.path, parts.query, *parts.path.split("/")}
+    for key, value in parse_qsl(parts.query, keep_blank_values=True):
+        secrets.update({key, value})
     for value in headers.values():
         secrets.update({value, *value.split()})
-    for secret in sorted((s for s in secrets if len(s) >= 6), key=len, reverse=True):
+    secrets |= {quote(s, safe="") for s in secrets} | {unquote(s) for s in secrets}
+    for secret in sorted((s for s in secrets if len(s) >= 4), key=len, reverse=True):
         text = text.replace(secret, "<redacted>")
     return text

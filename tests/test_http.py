@@ -112,3 +112,14 @@ def test_error_detail_redacts_url_and_header_secrets() -> None:
     assert "bad hook" in message
     assert "SECRETPATH" not in message
     assert "SECRETVAL" not in message
+
+
+def test_error_detail_redacts_query_tokens_and_encoded_paths() -> None:
+    body = {"detail": "token qtok1234 rejected for hooks.test%2FT0%2FB0%2FSECRETPATH"}
+    http = client(lambda r: httpx.Response(401, json=body), [])
+    with pytest.raises(HttpError) as err:
+        http.post_json("https://hooks.test/T0/B0/SECRETPATH?token=qtok1234", {})
+    message = str(err.value)
+    assert "rejected" in message
+    assert "qtok1234" not in message
+    assert "SECRETPATH" not in message
