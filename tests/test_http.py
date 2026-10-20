@@ -31,8 +31,8 @@ def test_non_json_body_returns_empty_dict() -> None:
     assert http.post_json("https://hooks.test/x", {}) == (200, {})
 
 
-@pytest.mark.parametrize("status", [429, 503])
-def test_retries_statuses_where_nothing_was_created(status: int) -> None:
+def test_retries_rate_limit() -> None:
+    status = 429
     calls: list[httpx.Request] = []
     responses = iter([httpx.Response(status), httpx.Response(status), httpx.Response(201)])
     http = client(lambda r: next(responses), calls)
@@ -42,8 +42,8 @@ def test_retries_statuses_where_nothing_was_created(status: int) -> None:
 
 def test_gives_up_after_attempts() -> None:
     calls: list[httpx.Request] = []
-    http = client(lambda r: httpx.Response(503), calls, attempts=3)
-    with pytest.raises(HttpError, match=r"HTTP 503 from x\.test"):
+    http = client(lambda r: httpx.Response(429), calls, attempts=3)
+    with pytest.raises(HttpError, match=r"HTTP 429 from x\.test"):
         http.post_json("https://x.test/p", {})
     assert len(calls) == 3
 
@@ -82,3 +82,33 @@ def test_read_timeout_is_not_retried() -> None:
     with pytest.raises(HttpError, match="ReadTimeout"):
         client(handler, calls).post_json("https://x.test/p", {})
     assert len(calls) == 1
+
+
+@pytest.mark.parametrize("status", [500, 502, 503])
+def test_server_errors_are_not_retried(status: int) -> None:
+    calls: list[httpx.Request] = []
+    http = client(lambda r: httpx.Response(status), calls)
+    with pytest.raises(HttpError):
+        http.post_json("https://x.test/p", {})
+    assert len(calls) == 1
+
+
+def test_redirect_is_not_reported_as_delivered() -> None:
+    calls: list[httpx.Request] = []
+    redirect = httpx.Response(302, headers={"Location": "https://elsewhere.test/"})
+    http = client(lambda r: redirect, calls)
+    with pytest.raises(HttpError) as err:
+        http.post_json("https://hooks.test/x", {})
+    assert err.value.status == 302
+    assert len(calls) == 1
+
+
+def test_error_detail_redacts_url_and_header_secrets() -> None:
+    body = {"errorMessages": ["bad hook https://hooks.test/T0/B0/SECRETPATH token tok-SECRETVAL"]}
+    http = client(lambda r: httpx.Response(400, json=body), [])
+    with pytest.raises(HttpError) as err:
+        http.post_json("https://hooks.test/T0/B0/SECRETPATH", {}, {"X-Secret": "tok-SECRETVAL"})
+    message = str(err.value)
+    assert "bad hook" in message
+    assert "SECRETPATH" not in message
+    assert "SECRETVAL" not in message

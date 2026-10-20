@@ -27,6 +27,8 @@ work. The Python here only seeds Jira, posts simulated reports and alerts, and s
 
 Python 3.11+ and [uv](https://docs.astral.sh/uv/). `uv sync` installs the locked dependencies
 and the `demo-ops-*` commands into `.venv/`. Plain pip also works: `pip install -e .`.
+The commands read the JSON from this checkout. With a non-editable install, set
+`DEMO_OPS_ROOT` to the checkout path.
 
 ```bash
 uv sync                   # runtime + dev tools, from uv.lock
@@ -50,7 +52,8 @@ missing ones.
 Every secret comes from the environment. None are in code, config, tests or logs, and none are
 needed for dry runs. `.env.example` lists each variable; copy it to `.env` (git-ignored) and load
 it with `set -a; . ./.env; set +a`. Error messages show only the host of a failed URL, because
-Slack and Devin webhook URLs carry their secret in the path.
+Slack and Devin webhook URLs carry their secret in the path. URL paths and header values are
+also redacted from any error body that is echoed back.
 
 ### Checks
 

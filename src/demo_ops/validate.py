@@ -142,12 +142,27 @@ def validate(root: Path, only: Sequence[str] = ()) -> list[str]:
         cross(
             "support-sim/reports.json", check_reports(loaded["support-sim/reports.json"], seed_refs)
         )
-    if "oncall-sim/alerts.json" in loaded:
-        expected = loaded.get("oncall-sim/expected.json")
-        if expected is None and (root / "oncall-sim/expected.json").is_file():
-            expected = json.loads((root / "oncall-sim/expected.json").read_text(encoding="utf-8"))
-        cross("oncall-sim/alerts.json", check_alerts(loaded["oncall-sim/alerts.json"], expected))
+    alerts_rel, expected_rel = "oncall-sim/alerts.json", "oncall-sim/expected.json"
+    if alerts_rel in loaded or expected_rel in loaded:
+        alerts, expected = (
+            loaded[rel] if rel in loaded else _load_if_valid(root, rel)
+            for rel in (alerts_rel, expected_rel)
+        )
+        if alerts is not None:
+            reported = alerts_rel if alerts_rel in loaded else expected_rel
+            cross(reported, check_alerts(alerts, expected))
     return problems
+
+
+def _load_if_valid(root: Path, rel: str) -> Any:
+    path = root / rel
+    if not path.is_file():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return None if any(True for _ in schema_errors(data, load_schema(SCHEMAS[rel]))) else data
 
 
 def main(argv: Sequence[str] | None = None) -> None:

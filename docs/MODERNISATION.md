@@ -24,8 +24,12 @@ thin, declarative control plane (playbooks + JSON) that hands the work to Devin 
   commands and the RUNBOOK keep working unchanged.
 - **Retries only where they cannot duplicate.** Every call is a non-idempotent POST: a Jira
   issue, a Devin session, a webhook-triggered session. So retries cover only connection
-  failures, 429 and 503, where the server did not act. Read timeouts and other 5xx fail
-  straight away, and the operator checks the board before rerunning.
+  failures and 429, where the server did not act. Read timeouts and every 5xx (including 503)
+  fail straight away, and the operator checks the board before rerunning. Redirects are not
+  followed, and a 3xx counts as a failure.
+- **Data comes from the checkout, not the wheel.** The JSON and playbooks are the control plane,
+  so they are not packaged. Source and editable installs find them next to `src/`; any other
+  install needs `DEMO_OPS_ROOT=/path/to/checkout`.
 - **Dataclasses, not pydantic-settings.** Five small settings groups don't justify a
   pydantic dependency.
 - **The audit-pack script is ported to Python** so that all API calls go through one client

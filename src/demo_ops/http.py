@@ -17,9 +17,10 @@ if TYPE_CHECKING:
 
 DEFAULT_TIMEOUT = 15.0
 DEFAULT_ATTEMPTS = 4
-# Only statuses where the server did not act on the request, so a retried POST cannot
-# create a second Jira issue or Devin session. Read timeouts are not retried for that reason.
-RETRY_STATUSES = frozenset({429, 503})
+# Only 429 (rate limited: the request was refused, not processed), so a retried POST cannot
+# create a second Jira issue or Devin session. A 503 or read timeout may follow a completed
+# write, so neither is retried.
+RETRY_STATUSES = frozenset({429})
 
 
 class HttpError(RuntimeError):
@@ -88,8 +89,10 @@ class HttpClient:
             raise HttpError(exc.status, _host(url), "gave up after retries") from None
         except self._httpx.HTTPError as exc:
             raise HttpError(0, _host(url), type(exc).__name__) from None
-        if response.is_error:
-            raise HttpError(response.status_code, _host(url), _error_detail(response))
+        if not response.is_success:
+            # Redirects are not followed (httpx default), so a 3xx means nothing was delivered.
+            detail = _redact(_error_detail(response), url, headers or {})
+            raise HttpError(response.status_code, _host(url), detail)
         return response.status_code, _json_object(response.content)
 
     def _post_once(
@@ -117,3 +120,14 @@ def _error_detail(response: httpx.Response) -> str:
         return ""
     messages = payload.get("errorMessages") or payload.get("errors") or payload.get("detail")
     return json.dumps(messages)[:300] if messages else ""
+
+
+def _redact(text: str, url: str, headers: Mapping[str, str]) -> str:
+    """Strip the URL path, query and header values (tokens, webhook secrets) from text."""
+    parts = urlsplit(url)
+    secrets = {url, parts.path, parts.query, *parts.path.split("/")}
+    for value in headers.values():
+        secrets.update({value, *value.split()})
+    for secret in sorted((s for s in secrets if len(s) >= 6), key=len, reverse=True):
+        text = text.replace(secret, "<redacted>")
+    return text

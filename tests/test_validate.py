@@ -113,3 +113,9 @@ def test_detects(
     edit(repo, rel, change)
     problems = validate.validate(repo)
     assert any(message in p for p in problems), problems
+
+
+def test_answer_key_alone_is_checked_against_alerts(repo: Path) -> None:
+    edit(repo, "oncall-sim/expected.json", lambda d: d["expected"].pop())
+    problems = validate.validate(repo, ["oncall-sim/expected.json"])
+    assert any("do not match alerts" in p for p in problems)
