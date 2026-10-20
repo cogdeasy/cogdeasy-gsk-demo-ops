@@ -11,14 +11,13 @@ import re
 import time
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
-from urllib.parse import parse_qsl, quote, unquote, urlsplit
+from urllib.parse import parse_qsl, quote, urlsplit
 
 if TYPE_CHECKING:
     import httpx
 
 DEFAULT_TIMEOUT = 15.0
 DEFAULT_ATTEMPTS = 4
-MIN_SECRET_LEN = 8
 # Only 429 (rate limited: the request was refused, not processed), so a retried POST cannot
 # create a second Jira issue or Devin session. A 503 or read timeout may follow a completed
 # write, so neither is retried.
@@ -73,9 +72,18 @@ class HttpClient:
         )
 
     def post_json(
-        self, url: str, body: Mapping[str, Any], headers: Mapping[str, str] | None = None
+        self,
+        url: str,
+        body: Mapping[str, Any],
+        headers: Mapping[str, str] | None = None,
+        *,
+        secret_url: bool = False,
     ) -> tuple[int, dict[str, Any]]:
-        """POST a JSON body; return (status, JSON object body or {})."""
+        """POST a JSON body; return (status, JSON object body or {}).
+
+        secret_url: the URL itself is a credential (Slack/Devin webhooks), so no part of the
+        error body is echoed. Otherwise the body is echoed with header and query values redacted.
+        """
         from tenacity import Retrying, retry_if_exception, stop_after_attempt, wait_exponential
 
         retrying = Retrying(
@@ -93,7 +101,7 @@ class HttpClient:
             raise HttpError(0, _host(url), type(exc).__name__) from None
         if not response.is_success:
             # Redirects are not followed (httpx default), so a 3xx means nothing was delivered.
-            detail = _redact(_error_detail(response), url, headers or {})
+            detail = "" if secret_url else _redact(_error_detail(response), url, headers or {})
             raise HttpError(response.status_code, _host(url), detail)
         return response.status_code, _json_object(response.content)
 
@@ -125,16 +133,13 @@ def _error_detail(response: httpx.Response) -> str:
 
 
 def _redact(text: str, url: str, headers: Mapping[str, str]) -> str:
-    """Strip the URL path, query values and header values (tokens, webhook secrets) from text."""
-    parts = urlsplit(url)
-    secrets = {url, parts.path, parts.query, *parts.path.split("/")}
-    for key, value in parse_qsl(parts.query, keep_blank_values=True):
-        secrets.update({key, value})
+    """Strip query values and header credentials (any length) from text."""
+    secrets = {v for _, v in parse_qsl(urlsplit(url).query, keep_blank_values=True)}
     for value in headers.values():
-        secrets.update({value, *value.split()})
-    secrets |= {quote(s, safe="") for s in secrets} | {unquote(s) for s in secrets}
-    # Short segments ("rest", "api", "issue", "Basic") are route words, not secrets.
-    for secret in sorted((s for s in secrets if len(s) >= MIN_SECRET_LEN), key=len, reverse=True):
+        scheme, _, credential = value.partition(" ")
+        secrets.update({value, credential} if credential else {value, scheme})
+    secrets |= {quote(s, safe="") for s in secrets}
+    for secret in sorted(filter(None, secrets), key=len, reverse=True):
         # Case-insensitive so lowercase percent-escapes (%2f) match quote()'s %2F.
         text = re.sub(re.escape(secret), "<redacted>", text, flags=re.IGNORECASE)
     return text

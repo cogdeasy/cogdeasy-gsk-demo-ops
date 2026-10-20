@@ -107,7 +107,7 @@ def main(argv: Sequence[str] | None = None) -> None:
                 slack = SlackSettings.from_env()
 
                 def send_slack(body: dict[str, Any]) -> str:
-                    http.post_json(slack.webhook_url, body)
+                    http.post_json(slack.webhook_url, body, secret_url=True)
                     return "posted"
 
                 post_reports(reports, "slack", send_slack, args.delay)

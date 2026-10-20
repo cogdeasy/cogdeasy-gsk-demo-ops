@@ -103,33 +103,23 @@ def test_redirect_is_not_reported_as_delivered() -> None:
     assert len(calls) == 1
 
 
-def test_error_detail_redacts_url_and_header_secrets() -> None:
-    body = {"errorMessages": ["bad hook https://hooks.test/T0/B0/SECRETPATH token tok-SECRETVAL"]}
+def test_secret_url_errors_echo_nothing_from_the_body() -> None:
+    body = {"errorMessages": ["bad hook https://hooks.test/T0/B0/SECRETPATH"]}
     http = client(lambda r: httpx.Response(400, json=body), [])
     with pytest.raises(HttpError) as err:
-        http.post_json("https://hooks.test/T0/B0/SECRETPATH", {}, {"X-Secret": "tok-SECRETVAL"})
-    message = str(err.value)
-    assert "bad hook" in message
-    assert "SECRETPATH" not in message
-    assert "SECRETVAL" not in message
+        http.post_json("https://hooks.test/T0/B0/SECRETPATH", {}, secret_url=True)
+    assert str(err.value) == "HTTP 400 from hooks.test"
 
 
-def test_error_detail_redacts_query_tokens_and_encoded_paths() -> None:
-    body = {"detail": "token qtok1234 rejected for hooks.test%2FT0%2FB0%2FSECRETPATH"}
-    http = client(lambda r: httpx.Response(401, json=body), [])
-    with pytest.raises(HttpError) as err:
-        http.post_json("https://hooks.test/T0/B0/SECRETPATH?token=qtok1234", {})
-    message = str(err.value)
-    assert "rejected" in message
-    assert "qtok1234" not in message
-    assert "SECRETPATH" not in message
-
-
-def test_redaction_keeps_route_words_and_matches_lowercase_escapes() -> None:
-    body = {"errorMessages": ["issue type is required; hook hooks.test%2ft0%2fsecretpath1"]}
+def test_error_detail_redacts_short_header_and_query_secrets() -> None:
+    body = {"errorMessages": ["issue type is required; key abc12 sig q%2f9 rejected"]}
     http = client(lambda r: httpx.Response(400, json=body), [])
     with pytest.raises(HttpError) as err:
-        http.post_json("https://hooks.test/rest/api/3/issue/SECRETPATH1", {})
+        http.post_json(
+            "https://jira.test/rest/api/3/issue?sig=q/9", {}, {"Authorization": "Basic abc12"}
+        )
     message = str(err.value)
     assert "issue type is required" in message
-    assert "secretpath1" not in message.lower()
+    assert "rejected" in message
+    assert "abc12" not in message
+    assert "q%2f9" not in message.lower()

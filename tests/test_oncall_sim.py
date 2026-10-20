@@ -47,6 +47,21 @@ def test_live_posts_with_secret_header(
     assert "s3cret" not in out
 
 
+def test_webhook_error_echoes_no_secret(
+    mock_http: MockHttp, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setenv("DEVIN_ONCALL_WEBHOOK_URL", "https://hooks.devin.test/w/HOOKID")
+    monkeypatch.setenv("DEVIN_ONCALL_WEBHOOK_SECRET", "s3")
+    mock_http.handler = lambda r: httpx.Response(401, json={"detail": "bad s3 for w/HOOKID"})
+    with pytest.raises(SystemExit) as exc:
+        oncall_sim.main(["--alert", "A1"])
+    captured = capsys.readouterr()
+    printed = f"{exc.value.code}{captured.out}{captured.err}"
+    assert "HTTP 401 from hooks.devin.test" in printed
+    assert "HOOKID" not in printed
+    assert "bad s3" not in printed
+
+
 def test_delay_only_between_alerts() -> None:
     sleeps: list[float] = []
     oncall_sim.post_alerts(ALERTS, lambda a: 200, 3, out=lambda _: None, sleep=sleeps.append)
