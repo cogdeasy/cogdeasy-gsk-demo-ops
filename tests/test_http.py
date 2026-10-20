@@ -52,7 +52,7 @@ def test_does_not_retry_other_errors_and_hides_url_path() -> None:
     calls: list[httpx.Request] = []
     http = client(lambda r: httpx.Response(400, json={"errorMessages": ["bad field"]}), calls)
     with pytest.raises(HttpError) as err:
-        http.post_json("https://hooks.test/services/T0/B0/SECRET", {})
+        http.post_json("https://hooks.test/services/T0/B0/SECRET", {}, echo_error_body=True)
     assert len(calls) == 1
     assert err.value.status == 400
     assert "bad field" in str(err.value)
@@ -103,11 +103,11 @@ def test_redirect_is_not_reported_as_delivered() -> None:
     assert len(calls) == 1
 
 
-def test_secret_url_errors_echo_nothing_from_the_body() -> None:
+def test_errors_echo_nothing_from_the_body_by_default() -> None:
     body = {"errorMessages": ["bad hook https://hooks.test/T0/B0/SECRETPATH"]}
     http = client(lambda r: httpx.Response(400, json=body), [])
     with pytest.raises(HttpError) as err:
-        http.post_json("https://hooks.test/T0/B0/SECRETPATH", {}, secret_url=True)
+        http.post_json("https://hooks.test/T0/B0/SECRETPATH", {})
     assert str(err.value) == "HTTP 400 from hooks.test"
 
 
@@ -116,10 +116,24 @@ def test_error_detail_redacts_short_header_and_query_secrets() -> None:
     http = client(lambda r: httpx.Response(400, json=body), [])
     with pytest.raises(HttpError) as err:
         http.post_json(
-            "https://jira.test/rest/api/3/issue?sig=q/9", {}, {"Authorization": "Basic abc12"}
+            "https://jira.test/rest/api/3/issue?sig=q/9",
+            {},
+            {"Authorization": "Basic abc12"},
+            echo_error_body=True,
         )
     message = str(err.value)
     assert "issue type is required" in message
     assert "rejected" in message
     assert "abc12" not in message
     assert "q%2f9" not in message.lower()
+
+
+def test_error_detail_redacts_plus_encoded_query_values() -> None:
+    body = {"detail": "sig a+b/c and a%2Bb%2Fc rejected"}
+    http = client(lambda r: httpx.Response(403, json=body), [])
+    with pytest.raises(HttpError) as err:
+        http.post_json("https://api.test/x?sig=a+b/c", {}, echo_error_body=True)
+    message = str(err.value)
+    assert "rejected" in message
+    assert "a+b" not in message
+    assert "a%2Bb" not in message

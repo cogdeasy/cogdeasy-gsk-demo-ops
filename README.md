@@ -52,8 +52,9 @@ missing ones.
 Every secret comes from the environment. None are in code, config, tests or logs, and none are
 needed for dry runs. `.env.example` lists each variable; copy it to `.env` (git-ignored) and load
 it with `set -a; . ./.env; set +a`. Error messages show only the host of a failed URL, because
-Slack and Devin webhook URLs carry their secret in the path. Webhook errors echo nothing from the
-response body. Other errors echo it with header credentials and query values redacted.
+Slack and Devin webhook URLs carry their secret in the path. Errors echo nothing from the response
+body, except Jira and Devin API errors (no credential in the URL), which add the server's
+message with header and query values redacted.
 
 ### Checks
 

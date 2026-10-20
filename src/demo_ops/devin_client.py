@@ -15,5 +15,7 @@ class DevinClient:
         self._headers = {"Authorization": f"Bearer {settings.api_key}"}
 
     def create_session(self, body: dict[str, Any]) -> dict[str, Any]:
-        _, created = self._http.post_json(self._sessions_url, body, self._headers)
+        _, created = self._http.post_json(
+            self._sessions_url, body, self._headers, echo_error_body=True
+        )
         return created

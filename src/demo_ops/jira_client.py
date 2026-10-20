@@ -33,7 +33,10 @@ class JiraClient:
     def create_issue(self, fields: Fields) -> str:
         """Create an issue and return its key (e.g. GSK-57)."""
         _, created = self._http.post_json(
-            f"{self._base}/rest/api/3/issue", {"fields": fields}, self._headers
+            f"{self._base}/rest/api/3/issue",
+            {"fields": fields},
+            self._headers,
+            echo_error_body=True,
         )
         key = created.get("key")
         if not isinstance(key, str):

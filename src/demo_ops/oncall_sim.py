@@ -76,7 +76,7 @@ def main(argv: Sequence[str] | None = None) -> None:
         with HttpClient() as http:
             post_alerts(
                 alerts,
-                lambda a: http.post_json(webhook.url, a, headers, secret_url=True)[0],
+                lambda a: http.post_json(webhook.url, a, headers)[0],
                 args.delay,
             )
 

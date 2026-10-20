@@ -11,7 +11,7 @@ import re
 import time
 from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Any
-from urllib.parse import parse_qsl, quote, urlsplit
+from urllib.parse import parse_qsl, quote, quote_plus, urlsplit
 
 if TYPE_CHECKING:
     import httpx
@@ -77,12 +77,13 @@ class HttpClient:
         body: Mapping[str, Any],
         headers: Mapping[str, str] | None = None,
         *,
-        secret_url: bool = False,
+        echo_error_body: bool = False,
     ) -> tuple[int, dict[str, Any]]:
         """POST a JSON body; return (status, JSON object body or {}).
 
-        secret_url: the URL itself is a credential (Slack/Devin webhooks), so no part of the
-        error body is echoed. Otherwise the body is echoed with header and query values redacted.
+        Errors carry only status and host. echo_error_body opts in to the server's error
+        message, for APIs whose URL holds no credential (Jira, Devin API); header values and
+        query values are still redacted from it. Never set it for webhook URLs.
         """
         from tenacity import Retrying, retry_if_exception, stop_after_attempt, wait_exponential
 
@@ -101,7 +102,7 @@ class HttpClient:
             raise HttpError(0, _host(url), type(exc).__name__) from None
         if not response.is_success:
             # Redirects are not followed (httpx default), so a 3xx means nothing was delivered.
-            detail = "" if secret_url else _redact(_error_detail(response), url, headers or {})
+            detail = _redact(_error_detail(response), url, headers or {}) if echo_error_body else ""
             raise HttpError(response.status_code, _host(url), detail)
         return response.status_code, _json_object(response.content)
 
@@ -134,11 +135,13 @@ def _error_detail(response: httpx.Response) -> str:
 
 def _redact(text: str, url: str, headers: Mapping[str, str]) -> str:
     """Strip query values and header credentials (any length) from text."""
-    secrets = {v for _, v in parse_qsl(urlsplit(url).query, keep_blank_values=True)}
+    query = urlsplit(url).query
+    secrets = {v for _, v in parse_qsl(query, keep_blank_values=True)}
+    secrets |= {pair.partition("=")[2] for pair in query.split("&")}
     for value in headers.values():
         scheme, _, credential = value.partition(" ")
         secrets.update({value, credential} if credential else {value, scheme})
-    secrets |= {quote(s, safe="") for s in secrets}
+    secrets |= {quote(s, safe="") for s in secrets} | {quote_plus(s) for s in secrets}
     for secret in sorted(filter(None, secrets), key=len, reverse=True):
         # Case-insensitive so lowercase percent-escapes (%2f) match quote()'s %2F.
         text = re.sub(re.escape(secret), "<redacted>", text, flags=re.IGNORECASE)
